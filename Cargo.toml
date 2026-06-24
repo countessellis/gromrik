@@ -1,6 +1,39 @@
 [package]
 name = "gromrik"
+license = "MIT"
+authors = ["Bethany Davis <ellis@despoena.com>"]
+description = "A Displeased Dwarf Chat Bot"
+repository = "https://github.com/countessellis/gromrik"
+homepage = "https://github.com/countessellis/gromrik"
+readme = "README.md"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+ansi_term = "0.12.1"
+chrono = "0.4.45"
+dirs = "6.0.0"
+mimalloc = { version = "0.1", default-features = false }
+reqwest = "0.13.4"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.150"
+ureq = { version = "3.3.0", features = ["json"] }
+url = "2.5.8"
+
+[build-dependencies]
+chrono = "0.4.45"
+
+[profile.dev]
+opt-level = 1
+debug = true
+
+[profile.release]
+opt-level = 3
+strip = true
+lto = true
+codegen-units = 1
+panic = "abort"
+debug-assertions = false
+overflow-checks = false
+package."*".opt-level = "s"
+

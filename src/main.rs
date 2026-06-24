@@ -1,3 +1,8 @@
+use ::gromrik::init;
+
+///////////// Main
+
 fn main() {
-    println!("Hello, world!");
+  init::run();
 }
+
