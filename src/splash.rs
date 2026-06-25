@@ -19,5 +19,5 @@ pub(crate) fn raw_splash() -> String {
 
 pub(crate) fn splash() -> String {
   let splash: String =  raw_splash();
-  format!("\n{}\n",Colour::Fixed(68).paint(splash))
+  format!("\n{}\n",Colour::Fixed(52).bold().paint(splash))
 }

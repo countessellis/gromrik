@@ -58,9 +58,8 @@ impl Config {
     config
   }
 
-  pub fn from_file(config: Option<Config>,config_path: &String) -> Config {
-    let mut config_file: String = Config::path_from_args(config_path);
-    config_file = match fs::exists(&config_file) {
+  pub fn from_file(config: Option<Config>,config_file: &String) -> Config {
+    let config_file: String = match fs::exists(&config_file) {
       Ok(true) => config_file.clone(),
       Ok(false) => {
         println!("Config file {} does not exist.",config_file);
