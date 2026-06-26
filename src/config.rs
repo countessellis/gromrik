@@ -2,12 +2,15 @@ use std::fmt;
 use std::fs;
 use std::fs::{read_to_string,write};
 use std::env::{args,Args};
+use std::str::FromStr;
 
 use crate::defaults::*;
+use crate::mode::*;
 use crate::util;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Config {
+  pub(crate) mode:           Mode,
   pub(crate) llm_server_url: String,
   pub(crate) model:          String,
 }
@@ -20,11 +23,13 @@ impl fmt::Display for Config {
              Configuration 
   -----------------------------------
 
+    Mode:           {}
     LLM Server URL: {}
     Model:          {}
 
   -----------------------------------
 ",
+      self.mode,
       self.llm_server_url,
       self.model,
     )
@@ -34,6 +39,7 @@ impl fmt::Display for Config {
 impl Config {
   pub(crate) fn defaults() -> Config {
     Config {
+      mode:           Mode::mode(),
       llm_server_url: DEFAULT_LLM_SERVER_URL.to_string(),
       model:          DEFAULT_MODEL.to_string(),
     }
@@ -42,6 +48,7 @@ impl Config {
   pub fn write(&self,config_file: &String) -> Result<String,String> {
     let config_file: String = util::build_path(&config_file,&"config".to_string());
     let mut config: Vec<String> = Vec::new();
+    config.push(format!("mode: {}",self.mode));
     config.push(format!("llm_server_url: {}",self.llm_server_url));
     config.push(format!("model: {}",self.model));
     match write(&config_file,config.join("\n")) {
@@ -52,6 +59,10 @@ impl Config {
 
   pub fn new() -> Config {
     let mut config = Config::defaults();
+    config.mode = match Mode::from_str(util::prompt(format!("Mode: (cli/tui/gui/web, default: {})",config.mode),config.mode.to_string()).as_str()) {
+      Ok(mode) => mode,
+      Err(_)   => Default::default(),
+    };
     config.llm_server_url = util::prompt(format!("LLM Server URL: (default: {})",config.llm_server_url),config.llm_server_url.clone());
     config.model          = util::prompt(format!("Model: (default: {})",config.model),config.model.clone());
     println!("\n");
@@ -68,13 +79,13 @@ impl Config {
         if to_file {
           match config.write(&config_file) {
             Ok(message) => println!("{}",message),
-            Err(err) => eprintln!("{}",err),
+            Err(err) => log::error!("{}",err),
           }
         }
         return config
       },
       Err(err) => {
-        eprintln!("Error testing if {} exists: {}",config_file,err);
+        log::error!("Error testing if {} exists: {}",config_file,err);
         return Config::defaults()
       }
     };
@@ -82,7 +93,7 @@ impl Config {
     let lines: Vec<String> = match read_to_string(&config_file) {
       Ok(lines) => lines,
       Err(err)  => {
-        eprintln!("Failed to read from config file, using defaults: {}",err);
+        log::error!("Failed to read from config file, using defaults: {}",err);
         String::new()
       },
     }.lines().map(|line| line.trim()).filter(|line| !line.is_empty()).filter(|line| !line.starts_with("#")).map(String::from).collect();
@@ -92,6 +103,10 @@ impl Config {
       if pair.len() > 1 {
         let value: String = pair[1..].join(":").trim_start().to_string();
         match pair[0] {
+          "mode"     => config.mode = match Mode::from_str(value.as_str()) {
+            Ok(mode) => mode,
+            Err(_)   => Default::default(),
+          },
           "llm_server_url" => config.llm_server_url = value.clone(),
           "model"          => config.model = value.clone(),
           // Ignore everything else:
@@ -119,7 +134,7 @@ impl Config {
   }
 
   pub fn get_config() -> Config {
-    let config_file: String = DEFAULT_CONFIG_FILE.to_string();
+    let config_file: String = Self::path_from_args(&DEFAULT_CONFIG_FILE.to_string());
     Config::from_file(None,&config_file)
   }
 
@@ -130,6 +145,11 @@ impl Config {
       match arg.as_str().trim() {
         // Ignore flags processed elsewhere:
         "--config" => {},
+        "--mode"   => {},
+        "--cli"    => {},
+        "--tui"    => {},
+        "--gui"    => {},
+        "--web"    => {},
         // Process options:
         "--llm-server-url" => match args.next() {
           Some(value) => config.llm_server_url = value.trim().to_string(),
@@ -140,7 +160,7 @@ impl Config {
           None => {},
         },
         // Error on everything else:
-        option => if option.starts_with("--") { eprintln!("{}: unrecognized option -- '{}'",util::bin_name(),option);
+        option => if option.starts_with("--") { log::error!("{}: unrecognized option -- '{}'",util::bin_name(),option);
         },
       }
     }

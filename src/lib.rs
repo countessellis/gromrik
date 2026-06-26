@@ -4,9 +4,13 @@ use mimalloc::MiMalloc;
 static GLOBAL: MiMalloc = MiMalloc;
 
 pub mod init;
+pub mod logger;
 
 pub(crate) mod chat;
+pub(crate) mod cli;
 pub(crate) mod config;
 pub(crate) mod defaults;
+pub(crate) mod mode;
 pub(crate) mod splash;
+pub(crate) mod ui;
 pub(crate) mod util;
