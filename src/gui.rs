@@ -205,6 +205,21 @@ impl eframe::App for GUI {
                 self.input.clear();
               },
               "/exit" => ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close),
+              "/help" => {
+                 let help_text = vec![
+                   "Available Commands:",
+                   "",
+                   "/help             - Display this utility command list.",
+                   "/clear            - Clear the chat logs completely.",
+                   "/save [filename]  - Save session to a file (or configuration default).",
+                   "/load [filename]  - Restore session and model context from a file.",
+                   "/exit             - Safely close and exit the application.",
+                   "",
+                 ].join("\n");
+                 self.history_lines.push(("System".to_string(), help_text));
+                 self.scroll_to_bottom = true;
+                 self.input.clear();
+              },
               _ => {
                 self.history_lines.push(("System".to_string(),format!("Unknown command: '{}'. Type /clear to wipe the log.", command)));
                 self.scroll_to_bottom = true;
