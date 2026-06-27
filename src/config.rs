@@ -145,11 +145,6 @@ impl Config {
       match arg.as_str().trim() {
         // Ignore flags processed elsewhere:
         "--config" => {},
-        "--mode"   => {},
-        "--cli"    => {},
-        "--tui"    => {},
-        "--gui"    => {},
-        "--web"    => {},
         // Process options:
         "--llm-server-url" => match args.next() {
           Some(value) => config.llm_server_url = value.trim().to_string(),
@@ -159,6 +154,17 @@ impl Config {
           Some(value) => config.model = value.trim().to_string(),
           None => {},
         },
+        "--mode" => match args.next() {
+          Some(mode) => match Mode::from_str(mode.as_str()) {
+            Ok(mode) => config.mode = mode,
+            Err(_)   => {},
+          },
+          None        => {},
+        },
+        "--cli" => config.mode = Mode::CLI,
+        "--tui" => config.mode = Mode::TUI,
+        "--gui" => config.mode = Mode::GUI,
+        "--web" => config.mode = Mode::WEB,
         // Error on everything else:
         option => if option.starts_with("--") { log::error!("{}: unrecognized option -- '{}'",util::bin_name(),option);
         },
