@@ -36,7 +36,7 @@ impl LogTarget {
         match OpenOptions::new().create(true).append(true).open(&path) {
           Ok(file) => env_logger::fmt::Target::Pipe(Box::new(file)),
           Err(err) => {
-            println!("Warning: Failed to open log file '{:?}' ({}). Falling back to Stdout.", path, err);
+            eprintln!("Warning: Failed to open log file '{:?}' ({}). Falling back to Stdout.", path, err);
             env_logger::fmt::Target::Stdout
           }
         }
@@ -56,10 +56,7 @@ pub fn init() {
         redact_patterns.push(escaped);
       }
     }
-  } else {
-    println!("Warning: redact_list.txt not found. No strings will be redacted.");
   }
-
   let filter_regex = if !redact_patterns.is_empty() {
     let unified_pattern = redact_patterns.join("|");
     Regex::new(&format!("({})", unified_pattern)).ok()

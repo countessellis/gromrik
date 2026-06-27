@@ -54,7 +54,7 @@ impl fmt::Display for Mode {
 
 impl Mode {
   pub(crate) fn mode() -> Mode {
-    println!("Getting mode from arguments.");
+    log::info!("Getting mode from arguments.");
     let mut args: Args = args();
     while let Some(arg) = args.next() {
       match arg.as_str() {
