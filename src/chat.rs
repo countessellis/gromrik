@@ -5,6 +5,10 @@ use std::time::Duration;
 use std::io::BufReader;
 use std::io::BufRead;
 use crossbeam_channel::Sender;
+use std::fs::File;
+use std::io::Write;
+use std::path::Path;
+use std::fs;
 
 use crate::config::*;
 use crate::defaults::*;
@@ -161,6 +165,55 @@ impl Chat {
       prompt = prompt.replace(&format!("{{{{{}}}}}",key.to_uppercase()),value);
     }
     prompt
+  }
+
+  pub(crate) fn save_history(&self, filename: &String, history_lines: &Vec<(String, String)>) -> Result<(), String> {
+    if let Some(parent_dir) = Path::new(&filename).parent() {
+      if let Err(err) = fs::create_dir_all(parent_dir) {
+        log::error!("Failed to create parent directory structure for history file: {}",err);
+        return Err(format!("Failed to create directory structure for history file: {}",err));
+      } 
+    }
+    let mut file = match File::create(filename) {
+      Ok(file) => file,
+      Err(err) => return Err(format!("Failed to create save history to {}: {}",filename,err)),
+    };
+    let json = match serde_json::to_string_pretty(history_lines) {
+      Ok(json) => json,
+      Err(err) => return Err(format!("Failed to convert history to JSON: {}",err)),
+    };
+    match file.write_all(json.as_bytes()) {
+      Ok(())   => Ok(()),
+      Err(err) => return Err(format!("Failed to write history to {}: {}",filename,err)),
+    }
+  }
+
+  pub(crate) fn load_history(&mut self, filename: &String) -> Result<Vec<(String, String)>, String> {
+    let mut file = match File::open(filename) {
+      Ok(file) => file,
+      Err(err) => return Err(format!("No saved history file found at {}: {}",filename,err)),
+    };
+    let mut json = String::new();
+    match file.read_to_string(&mut json) {
+      Ok(_)    => {},
+      Err(err) => return Err(format!("Failed to read history from {}: {}",filename,err)),
+    }
+    let lines: Vec<(String, String)> = match serde_json::from_str(&json) {
+      Ok(lines) => lines,
+      Err(err)  => return Err(format!("Saved history file {} is corrupted: {}",filename,err)),
+    };
+    self.history.clear();
+    for (sender, content) in &lines {
+       let role = if sender == "You" {
+         "user".into()
+       } else if sender == "System" {
+         continue;
+       } else {
+         "assistant".into()
+       };
+       self.history.push(Message { role, content: content.clone() });
+    }
+    Ok(lines)
   }
 }
 

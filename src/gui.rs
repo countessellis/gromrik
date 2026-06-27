@@ -10,6 +10,7 @@ use crate::defaults::*;
 #[derive(Clone)]
 #[allow(dead_code)]
 pub(crate) struct GUI {
+  pub(crate) config: Config,
   pub(crate) chat: Chat,
   pub(crate) recv: Receiver<StreamEvent>,
   pub(crate) history_lines: Vec<(String, String)>, 
@@ -24,6 +25,7 @@ impl GUI {
     let (send, recv) = unbounded::<StreamEvent>();
     let initial_greeting = vec![(APP_NAME.to_string(),DEFAULT_GREETING.to_string())];
     GUI {
+      config: config.clone(),
       chat: Chat::new(&config,send),
       recv: recv,
       history_lines: initial_greeting,
@@ -177,6 +179,29 @@ impl eframe::App for GUI {
                 self.current_reply.clear();
                 self.is_answering = false;
                 self.scroll_to_bottom = false;
+                self.input.clear();
+              },
+              "/save" => {
+                let filename: String = if parts.len() > 1 { parts[1..].join(" ") } else { self.config.history_file.clone() };
+                let msg = match self.chat.save_history(&filename.to_string(), &self.history_lines) {
+                  Ok(_) => format!("History successfully saved to {}.", filename),
+                  Err(err) => format!("Save error: {}",err)
+                };
+                self.history_lines.push(("System".to_string(),msg));
+                self.scroll_to_bottom = true;
+                self.input.clear();
+              },
+              "/load" => {
+                let filename: String = if parts.len() > 1 { parts[1..].join(" ") } else { self.config.history_file.clone() };
+                let msg = match self.chat.load_history(&filename.to_string()) {
+                  Ok(loaded_data) => {
+                    self.history_lines = loaded_data;
+                    format!("History loaded from {} successfully.", filename)
+                  },
+                  Err(e) => format!("Load error: {}", e)
+                };
+                self.history_lines.push(("System".to_string(), msg));
+                self.scroll_to_bottom = true;
                 self.input.clear();
               },
               "/exit" => ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close),

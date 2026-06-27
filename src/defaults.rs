@@ -25,7 +25,8 @@ pub(crate) const DEFAULT_LOG_TARGET:           LogTarget                        
 pub(crate) const REDACT_LOG_LIST:              &str                                        = "config/redact_list.txt";
 
 // Path Constants:
-pub(crate) const DEFAULT_CONFIG_FILE: &str = "config/gromrik.cfg";
+pub(crate) const DEFAULT_CONFIG_FILE:  &str = "config/gromrik.cfg";
+pub(crate) const DEFAULT_HISTORY_FILE: &str = "history/history.json";
 
 // Gromrik Constants:
 pub(crate) const DEFAULT_MODE:           &str = "gui";

@@ -18,6 +18,7 @@ use crate::splash;
 #[derive(Clone)]
 #[allow(dead_code)]
 pub(crate) struct TUI {
+  pub(crate) config:        Config,
   pub(crate) chat:          Chat,
   pub(crate) recv:          Receiver<StreamEvent>,
   pub(crate) input:         String,
@@ -33,6 +34,7 @@ impl TUI {
     let (send, recv) = unbounded::<StreamEvent>();
     let initial_greeting = vec![(APP_NAME.to_string(), DEFAULT_GREETING.to_string())];
     TUI {
+      config:        config.clone(),
       chat:          Chat::new(&config,send),
       recv:          recv,
       input:         String::new(),
@@ -232,6 +234,31 @@ impl TUI {
                             self.history_lines.clear();
                             self.current_reply.clear();
                             self.is_answering = false;
+                            self.scroll_offset = 0;
+                            self.user_scrolled = false;
+                            self.input.clear();
+                          },
+                          "/save" => {
+                            let filename: String = if parts.len() > 1 { parts[1..].join(" ") } else { self.config.history_file.clone() };
+                            let msg = match self.chat.save_history(&filename.to_string(), &self.history_lines) {
+                              Ok(_) => format!("History successfully saved to {}.", filename),
+                              Err(err) => format!("Save error: {}",err)
+                            };
+                            self.history_lines.push(("System".to_string(),msg));
+                            self.scroll_offset = 0;
+                            self.user_scrolled = false;
+                            self.input.clear();
+                          },
+                          "/load" => {
+                            let filename: String = if parts.len() > 1 { parts[1..].join(" ") } else { self.config.history_file.clone() };
+                            let msg = match self.chat.load_history(&filename.to_string()) {
+                              Ok(loaded_data) => {
+                                self.history_lines = loaded_data;
+                                format!("History loaded from {} successfully.", filename)
+                              },
+                              Err(e) => format!("Load error: {}", e)
+                            };
+                            self.history_lines.push(("System".to_string(), msg));
                             self.scroll_offset = 0;
                             self.user_scrolled = false;
                             self.input.clear();

@@ -13,6 +13,7 @@ pub(crate) struct Config {
   pub(crate) mode:           Mode,
   pub(crate) llm_server_url: String,
   pub(crate) model:          String,
+  pub(crate) history_file:   String,
 }
 
 impl fmt::Display for Config {
@@ -26,12 +27,14 @@ impl fmt::Display for Config {
     Mode:           {}
     LLM Server URL: {}
     Model:          {}
+    History File:   {}
 
   -----------------------------------
 ",
       self.mode,
       self.llm_server_url,
       self.model,
+      self.history_file,
     )
   }
 }
@@ -42,6 +45,7 @@ impl Config {
       mode:           Mode::mode(),
       llm_server_url: DEFAULT_LLM_SERVER_URL.to_string(),
       model:          DEFAULT_MODEL.to_string(),
+      history_file:   DEFAULT_HISTORY_FILE.to_string(),
     }
   }
   
@@ -51,6 +55,7 @@ impl Config {
     config.push(format!("mode: {}",self.mode));
     config.push(format!("llm_server_url: {}",self.llm_server_url));
     config.push(format!("model: {}",self.model));
+    config.push(format!("history_file: {}",self.history_file));
     match write(&config_file,config.join("\n")) {
       Ok(()) => Ok(format!("Outputted config to {}",config_file)),
       Err(err) => Err(format!("Failed to output config to {}: {}",config_file,err.to_string()))
@@ -65,6 +70,7 @@ impl Config {
     };
     config.llm_server_url = util::prompt(format!("LLM Server URL: (default: {})",config.llm_server_url),config.llm_server_url.clone());
     config.model          = util::prompt(format!("Model: (default: {})",config.model),config.model.clone());
+    config.history_file   = util::prompt(format!("History Save File: (default: {})",config.history_file),config.history_file.clone());
     println!("\n");
     config
   }
@@ -109,6 +115,7 @@ impl Config {
           },
           "llm_server_url" => config.llm_server_url = value.clone(),
           "model"          => config.model = value.clone(),
+          "history_file"   => config.history_file = value.clone(),
           // Ignore everything else:
           _ => {},
         };
@@ -152,6 +159,10 @@ impl Config {
         },
         "--model" => match args.next() {
           Some(value) => config.model = value.trim().to_string(),
+          None => {},
+        },
+        "--history-file" => match args.next() {
+          Some(value) => config.history_file = value.trim().to_string(),
           None => {},
         },
         "--mode" => match args.next() {
