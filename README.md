@@ -7,6 +7,10 @@ Gromrik is a displeased Dwarf who will grumpily tell you why you're wrong and no
 * An Ollama compatable API to hit. Confirmed to work with Ollama itself and Lemonade
 * Appropriate models set in the config and existing on the LLM server. Default and recommended is qwen2.5:7b.
 
+## Reference
+
+[Licensing Information](LICENSING.md)
+
 ## Config File and Settings
 
 The config file by default is config/gromrik.cfg irelative to the run location. You can specify a different file with:
@@ -24,9 +28,9 @@ The config file should look something like:
 
 Mode can be:
 
-    cli: Command line output (default)
+    cli: Command line output
     tui: Terminal user interface (psuedo GUI)
-    gui: Graphical user interface (graphical application, not yet implemented)
+    gui: Graphical user interface (graphical application, default)
     web: Web server (for interacting through a browser, not yet implemented)
 
 Mode can be set from command line with these options:

@@ -3,11 +3,9 @@ use ratatui::{
   crossterm::event::{self, Event, KeyCode, KeyEventKind},
   crossterm::terminal,
   prelude::*,
-  text::Line,
-  style::{Style,Modifier},
+  style::Style,
   widgets::*,
 };
-use std::thread;
 use std::time::Duration;
 
 use crate::chat::*;
@@ -33,11 +31,12 @@ pub(crate) struct TUI {
 impl TUI {
   pub(crate) fn new(config: &Config) -> TUI {
     let (send, recv) = unbounded::<StreamEvent>();
+    let initial_greeting = vec![(APP_NAME.to_string(), DEFAULT_GREETING.to_string())];
     TUI {
       chat:          Chat::new(&config,send),
       recv:          recv,
       input:         String::new(),
-      history_lines: Vec::new(),
+      history_lines: initial_greeting,
       current_reply: String::new(),
       is_answering:  false,
       scroll_offset: 0,
@@ -99,15 +98,6 @@ impl TUI {
               .split(chat_vertical_chunks[0]);
             let chat_history_pane = chat_components[0];
             let chat_input_pane = chat_components[1];
-            let indented_chat_grid = Layout::default()
-              .direction(Direction::Horizontal)
-              .constraints([
-                Constraint::Length(2),
-                Constraint::Min(0),
-              ])
-              .split(chat_history_pane);
-            let indent_space_filler = indented_chat_grid[0];
-            let actual_indented_text_pane = indented_chat_grid[1];
             let vertical_chunks = Layout::default()
               .direction(Direction::Vertical)
               .constraints([
@@ -139,17 +129,15 @@ impl TUI {
             let mut text_spans = Vec::new();
             for (sender, content) in &self.history_lines {
               let header_line = if sender == "You" {
-              ratatui::text::Line::from(format!("{} {}:",HUMAN_EMOJI,sender))
-                .fg(Color::Rgb(100, 180, 220))
-                .bold()
+                ratatui::text::Line::from(format!("{} {}:",HUMAN_EMOJI,sender)).fg(Color::Rgb(100, 180, 220)).bold()
+              } else if sender == "System" {
+                ratatui::text::Line::from(format!("{}:", sender)).fg(Color::Rgb(215, 55, 55)).bold()
               } else {
-                ratatui::text::Line::from(format!("{}  {}:",GROMRIK_EMOJI,sender))
-                  .fg(Color::Rgb(194, 162, 105))
-                  .bold()
+                ratatui::text::Line::from(format!("{}  {}:",GROMRIK_EMOJI,sender)).fg(Color::Rgb(194, 162, 105)).bold()
               };
               text_spans.push(header_line);
               text_spans.push(ratatui::text::Line::from("")); 
-              let mut wrapped_lines = Self::wrap_and_indent_text(content, inner_width);
+              let wrapped_lines = Self::wrap_and_indent_text(content, inner_width);
               for mut line in wrapped_lines {
                 line = line.fg(Color::Rgb(240, 240, 245)).not_dim(); // Pure bright off-white text [local]
                 text_spans.push(line);
@@ -162,7 +150,7 @@ impl TUI {
                 .bold();
               text_spans.push(active_header);
               text_spans.push(ratatui::text::Line::from("")); 
-              let mut wrapped_reply_lines = Self::wrap_and_indent_text(&self.current_reply, inner_width);
+              let wrapped_reply_lines = Self::wrap_and_indent_text(&self.current_reply, inner_width);
               for mut line in wrapped_reply_lines {
                 line = line.fg(Color::Rgb(240, 240, 245)).not_dim(); 
                 text_spans.push(line);
@@ -236,7 +224,26 @@ impl TUI {
                   KeyCode::Enter => {
                     if !self.input.is_empty() && !self.is_answering {
                       let prompt = self.input.trim().to_string();
-                      if prompt.eq_ignore_ascii_case("exit") {
+                      if prompt.starts_with('/') {
+                        let parts: Vec<&str> = prompt.split_whitespace().collect();
+                        let command = parts[0].to_lowercase();
+                        match command.as_str() {
+                          "/clear" => {
+                            self.history_lines.clear();
+                            self.current_reply.clear();
+                            self.is_answering = false;
+                            self.scroll_offset = 0;
+                            self.user_scrolled = false;
+                            self.input.clear();
+                          },
+                          "/exit" => user_wants_to_exit = true,
+                          _ => {
+                            self.history_lines.push(("System".to_string(),format!("Unknown command: '{}'. Type /clear to wipe the log.", command)));
+                            self.user_scrolled = false;
+                            self.input.clear();
+                          },
+                        }
+                      } else if prompt.eq_ignore_ascii_case("exit") {
                         user_wants_to_exit = true;
                       } else {
                         self.user_scrolled = false; 

@@ -10,23 +10,26 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-ansi_term = "0.12.1"
-chrono = "0.4.45"
-crossbeam-channel = "0.5.15"
-dirs = "6.0.0"
-env_logger = "0.11.11"
-log = "0.4.33"
+ansi_term = "0.12"
+chrono = "0.4"
+crossbeam-channel = "0.5"
+dirs = "6.0"
+eframe = "0.35"
+egui_extras = { version = "0.35", features = ["all_loaders"] }
+env_logger = "0.11"
+image = { version = "0.25", features = ["png"] }
+log = "0.4"
 mimalloc = { version = "0.1", default-features = false }
-ratatui = "0.30.2"
-regex = "1.12.4"
-reqwest = "0.13.4"
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.150"
-ureq = { version = "3.3.0", features = ["json"] }
-url = "2.5.8"
+ratatui = "0.30"
+regex = "1.12"
+reqwest = "0.13"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+ureq = { version = "3.3", features = ["json"] }
+url = "2.5"
 
 [build-dependencies]
-chrono = "0.4.45"
+chrono = "0.4"
 
 [profile.dev]
 opt-level = 1

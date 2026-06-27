@@ -24,6 +24,7 @@ impl CLI {
   {} AI. Type 'exit' to quit.
 -----------------------------------
 ",APP_NAME);
+    println!("\n{}  {}:\n\n  {}",GROMRIK_EMOJI,APP_NAME,DEFAULT_GREETING);
     loop {
       let indent = "  "; // 4 spaces indentation
       let max_width = 80;   // Wrap at 80 characters
