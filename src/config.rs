@@ -78,7 +78,7 @@ impl Config {
         let to_file: bool = util::prompt(format!("Write config to new file at {}? (true/false, default false)",config_file),"false".to_string()).parse().unwrap_or(false);
         if to_file {
           match config.write(&config_file) {
-            Ok(message) => println!("{}",message),
+            Ok(message) => log::info!("{}",message),
             Err(err) => log::error!("{}",err),
           }
         }
