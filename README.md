@@ -23,6 +23,7 @@ The config file should look something like:
     mode: cli
     llm_server_url: http://localhost:11434/api/chat
     model: qwen2.5:7b
+    history_file: history/history.json
 
 ### Mode
 
@@ -70,6 +71,18 @@ This is the LLM that is being used. It must be already loaded into the server. F
 The default model works very well, but you can change it either in the config file or from the command line:
 
     --model <model>
+
+### History File
+
+The path used for saving and loading conversation history (supported in TUI and GUI).
+
+Default is relative to where the program is ran:
+
+    history/history.json
+
+This can be set in the config file with history_file, or from the command line:
+
+    --history-file <file path>
 
 ## Building Gromrik
 
