@@ -25,7 +25,7 @@ The config file should look something like:
 Mode can be:
 
     cli: Command line output (default)
-    tui: Terminal user interface (psuedo GUI, not yet implemented)
+    tui: Terminal user interface (psuedo GUI)
     gui: Graphical user interface (graphical application, not yet implemented)
     web: Web server (for interacting through a browser, not yet implemented)
 
