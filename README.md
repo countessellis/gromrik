@@ -41,6 +41,16 @@ Mode can be set from command line with these options:
     --gui
     --web
 
+Mode can also be defaulted to a specific one by using the binaries:
+
+    gromrik
+    gromrik-cli
+    gromrik-tui
+    gromrik-gui
+    gromrik-web
+
+Note that config file and command line options change the mode as normal, using the other binaries only changes the default if not set with one or the other.
+
 ### LLM Server URL
 
 The server to hit for LLM output can be set with llm_server_url. This should be an ollama compatible chat API. Default:
@@ -74,24 +84,24 @@ The default model works very well, but you can change it either in the config fi
 
 Just build it:
 
-    cargo build | Build it.
-    cargo run   | Run it.
+    cargo build --bins | Build it.
+    cargo run          | Run it.
 
 ### Release:
 
 Compiling local:
 
-    cargo build --release | Build it.
-    cargo run --release   | Run it.
+    cargo build --bins --release | Build it.
+    cargo run --release          | Run it.
 
 If you want it portable but aren't cross compiling, use the appropriate for ARM and x86_64 (RISCV :
 
-    cargo build --release --target=aarch64-unknown-linux-musl  | ARM
-    cargo build --release --target=x86_64-unknown-linux-musl   | x86_64
+    cargo build --bins --release --target=aarch64-unknown-linux-musl  | ARM
+    cargo build --bins --release --target=x86_64-unknown-linux-musl   | x86_64
 
 Cross compiling:
 
-    cross build --release --target=aarch64-unknown-linux-musl  | ARM
-    cross build --release --target=x86_64-unknown-linux-musl   | x86_64
-    cross build --release --target=riscv64gc-unknown-linux-gnu | RISC-V
+    cross build --bins --release --target=aarch64-unknown-linux-musl  | ARM
+    cross build --bins --release --target=x86_64-unknown-linux-musl   | x86_64
+    cross build --bins --release --target=riscv64gc-unknown-linux-gnu | RISC-V
 
