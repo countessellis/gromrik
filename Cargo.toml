@@ -8,6 +8,31 @@ homepage = "https://github.com/countessellis/gromrik"
 readme = "README.md"
 version = "0.1.0"
 edition = "2024"
+default-run = "gromrik"
+
+[[bin]]
+name = "gromrik"
+path = "src/main.rs"
+
+[[bin]]
+name = "gromrik-cli"
+path = "src/bin/cli.rs"
+
+[[bin]]
+name = "gromrik-tui"
+path = "src/bin/tui.rs"
+
+[[bin]]
+name = "gromrik-gui"
+path = "src/bin/gui.rs"
+
+[[bin]]
+name = "gromrik-web"
+path = "src/bin/web.rs"
+
+[lib]
+name = "gromrik"
+path = "src/lib.rs"
 
 [dependencies]
 ansi_term = "0.12"
