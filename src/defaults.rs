@@ -30,6 +30,8 @@ pub(crate) const DEFAULT_CONFIG_FILE: &str = "config/gromrik.cfg";
 // Gromrik Constants:
 pub(crate) const DEFAULT_LLM_SERVER_URL: &str = "http://localhost:11434/api/chat";
 pub(crate) const DEFAULT_MODEL:          &str = "qwen2.5:7b";
+pub(crate) const GROMRIK_EMOJI:          &str = "\u{1F624}\u{26Cf}\u{FE0F}";
+pub(crate) const HUMAN_EMOJI:            &str = "\u{1F914}\u{1F4AC}";
 
 // Includes:
 pub(crate) const SYSTEM_PROMPT_TEMPLATE: &str = include_str!("../resources/system_prompt.tpl");

@@ -27,13 +27,13 @@ impl CLI {
     loop {
       let indent = "  "; // 4 spaces indentation
       let max_width = 80;   // Wrap at 80 characters
-      println!("\nYou:\n");
+      println!("\n{} You:\n",HUMAN_EMOJI);
       print!("{}",indent);
       std::io::Write::flush(&mut std::io::stdout()).ok();
       let mut input = String::new();
       if let Err(err) = std::io::stdin().read_line(&mut input) {
         log::error!("Failed to get user's message: {}", err);
-        println!("\n{}:\nI can't even hear you!\n",APP_NAME);
+        println!("\n{}  {}:\nI can't even hear you!\n",GROMRIK_EMOJI,APP_NAME);
         continue;
       }
       let input = input.trim().to_string();
@@ -45,10 +45,10 @@ impl CLI {
       }
       if let Err(err) = self.chat.chat(&input) {
         log::error!("Engine error: {}", err);
-        println!("\n{}:\nBah! Leave me alone!\n",APP_NAME);
+        println!("\n{}  {}:\nBah! Leave me alone!\n",GROMRIK_EMOJI,APP_NAME);
         continue;
       }
-      println!("\n{}:\n", APP_NAME);
+      println!("\n{}  {}:\n",GROMRIK_EMOJI,APP_NAME);
       print!("{}", indent);
       std::io::Write::flush(&mut std::io::stdout()).ok();
       let mut complete_answer = String::new();
