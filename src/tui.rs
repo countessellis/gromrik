@@ -65,7 +65,9 @@ impl TUI {
           if let Err(err) = terminal.draw(|frame| {
             let full_area = frame.area();
             let text_image = self.config.persona.text_image.clone();
-            let (persona_image_width, persona_image_height) = Self::get_text_dimensions(&text_image);
+            let (mut persona_image_width, mut persona_image_height) = Self::get_text_dimensions(&text_image);
+            if persona_image_width < 60 { persona_image_width = 60 }
+            if persona_image_height < 30 { persona_image_height = 30 }
             let horizontal_chunks = Layout::default()
               .direction(Direction::Horizontal)
               .constraints([
