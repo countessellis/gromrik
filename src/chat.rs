@@ -5,13 +5,14 @@ use std::time::Duration;
 use std::io::BufReader;
 use std::io::BufRead;
 use crossbeam_channel::Sender;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
-use std::fs;
+#[cfg(any(feature = "tui", feature = "gui", feature = "web"))]
+pub use std::fs::{self,File};
+#[cfg(any(feature = "tui", feature = "gui", feature = "web"))]
+pub use std::io::Write;
+#[cfg(any(feature = "tui", feature = "gui", feature = "web"))]
+pub use std::path::Path;
 
 use crate::config::*;
-use crate::defaults::*;
 
 #[derive(Clone)]
 pub(crate) struct Chat {
@@ -65,7 +66,7 @@ impl Chat {
     let agent = ureq::Agent::new_with_config(agent_config);
     let history: Vec<Message> = vec![Message {
       role: "system".into(),
-      content: Self::render(SYSTEM_PROMPT_TEMPLATE,&HashMap::new()),
+      content: Self::render(&config.persona.prompt,&HashMap::new()),
     }];
     Chat {
       config:  config.clone(),
@@ -167,6 +168,7 @@ impl Chat {
     prompt
   }
 
+  #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
   pub(crate) fn save_history(&self, filename: &String, history_lines: &Vec<(String, String)>) -> Result<(), String> {
     if let Some(parent_dir) = Path::new(&filename).parent() {
       if let Err(err) = fs::create_dir_all(parent_dir) {
@@ -188,6 +190,7 @@ impl Chat {
     }
   }
 
+  #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
   pub(crate) fn load_history(&mut self, filename: &String) -> Result<Vec<(String, String)>, String> {
     let mut file = match File::open(filename) {
       Ok(file) => file,

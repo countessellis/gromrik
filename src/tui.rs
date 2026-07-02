@@ -1,3 +1,5 @@
+#![cfg(feature = "tui")]
+
 use crossbeam_channel::{unbounded,Receiver};
 use ratatui::{
   crossterm::event::{self, Event, KeyCode, KeyEventKind},
@@ -11,12 +13,10 @@ use std::time::Duration;
 use crate::chat::*;
 use crate::config::*;
 use crate::defaults::*;
-use crate::splash;
 
 ///////////// TUI
 
 #[derive(Clone)]
-#[allow(dead_code)]
 pub(crate) struct TUI {
   pub(crate) config:        Config,
   pub(crate) chat:          Chat,
@@ -32,7 +32,7 @@ pub(crate) struct TUI {
 impl TUI {
   pub(crate) fn new(config: &Config) -> TUI {
     let (send, recv) = unbounded::<StreamEvent>();
-    let initial_greeting = vec![(APP_NAME.to_string(), DEFAULT_GREETING.to_string())];
+    let initial_greeting = vec![(config.persona.name.clone(),config.persona.greeting.clone())];
     TUI {
       config:        config.clone(),
       chat:          Chat::new(&config,send),
@@ -55,7 +55,7 @@ impl TUI {
             match event {
               StreamEvent::Token(token) => self.current_reply.push_str(&token),
               StreamEvent::Finished => {
-                self.history_lines.push((format!("{}",APP_NAME), self.current_reply.clone()));
+                self.history_lines.push((format!("{}",self.config.persona.name), self.current_reply.clone()));
                 self.current_reply.clear();
                 self.is_answering = false;
               },
@@ -64,12 +64,12 @@ impl TUI {
           let mut user_wants_to_exit = false;
           if let Err(err) = terminal.draw(|frame| {
             let full_area = frame.area();
-            let raw_splash = splash::raw_splash().trim().to_string();
-            let (splash_width, splash_height) = Self::get_text_dimensions(&raw_splash);
+            let text_image = self.config.persona.text_image.clone();
+            let (persona_image_width, persona_image_height) = Self::get_text_dimensions(&text_image);
             let horizontal_chunks = Layout::default()
               .direction(Direction::Horizontal)
               .constraints([
-                Constraint::Length(splash_width + 2),
+                Constraint::Length(persona_image_width + 2),
                 Constraint::Min(0),
               ])
               .split(full_area);
@@ -86,7 +86,7 @@ impl TUI {
             let chat_vertical_chunks = Layout::default()
               .direction(Direction::Vertical)
               .constraints([
-                Constraint::Length(splash_height + 2),
+                Constraint::Length(persona_image_height + 2),
                 Constraint::Min(0),
               ])
               .split(chat_column);
@@ -103,21 +103,21 @@ impl TUI {
             let vertical_chunks = Layout::default()
               .direction(Direction::Vertical)
               .constraints([
-                Constraint::Length(splash_height + 2),
+                Constraint::Length(persona_image_height + 2),
                 Constraint::Min(0),
               ])
               .split(left_column);
-            let left_splash_pane = vertical_chunks[0];
-            let splash: Text = Text::from(raw_splash).fg(Color::Rgb(91,55,36));
-            let splash_paragraph = Paragraph::new(splash)
+            let left_persona_image_pane = vertical_chunks[0];
+            let persona_image: Text = Text::from(text_image).fg(Color::Rgb(91,55,36));
+            let persona_image_paragraph = Paragraph::new(persona_image)
               .alignment(Alignment::Center)
               .block(Block::default()
-              .title(ratatui::text::Line::from(format!(" {} ",APP_NAME)).fg(Color::Rgb(245,235,215)).bold())
+              .title(ratatui::text::Line::from(format!(" {} ",self.config.persona.name)).fg(Color::Rgb(245,235,215)).bold())
               .title_alignment(Alignment::Center)
               .borders(Borders::ALL)
               .border_type(BorderType::Rounded)
               .border_style(Style::default().fg(Color::Rgb(194,162,105))));
-            frame.render_widget(splash_paragraph,left_splash_pane);
+            frame.render_widget(persona_image_paragraph,left_persona_image_pane);
             let history_block = Block::default()
               .title(ratatui::text::Line::from(" Conversation ").fg(Color::Rgb(165,235,200)).bold())
               .title_alignment(Alignment::Center)
@@ -135,7 +135,7 @@ impl TUI {
               } else if sender == "System" {
                 ratatui::text::Line::from(format!("{}:", sender)).fg(Color::Rgb(215, 55, 55)).bold()
               } else {
-                ratatui::text::Line::from(format!("{}  {}:",GROMRIK_EMOJI,sender)).fg(Color::Rgb(194, 162, 105)).bold()
+                ratatui::text::Line::from(format!("{}  {}:",self.config.persona.emoji,sender)).fg(Color::Rgb(194, 162, 105)).bold()
               };
               text_spans.push(header_line);
               text_spans.push(ratatui::text::Line::from("")); 
@@ -147,7 +147,7 @@ impl TUI {
               text_spans.push(ratatui::text::Line::from(""));
             }
             if self.is_answering && !self.current_reply.is_empty() {
-              let active_header = ratatui::text::Line::from(format!("{}  {}:",GROMRIK_EMOJI,APP_NAME))
+              let active_header = ratatui::text::Line::from(format!("{}  {}:",self.config.persona.emoji,self.config.persona.name))
                 .fg(Color::Rgb(194, 162, 105))
                 .bold();
               text_spans.push(active_header);
@@ -178,9 +178,9 @@ impl TUI {
               .block(history_block);
             frame.render_widget(history_text, chat_history_pane);
             let input_title = if self.is_answering {
-                format!(" {} is writing... ",APP_NAME)
+                format!(" {} is writing... ",self.config.persona.name)
             } else {
-                format!(" Ask {} (Type 'exit' to quit) ",APP_NAME)
+                format!(" Ask {} (Type 'exit' to quit) ",self.config.persona.name)
             };
             let input_border_color = if self.is_answering {
               Color::Rgb(115, 120, 125)

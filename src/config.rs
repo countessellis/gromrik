@@ -6,18 +6,32 @@ use std::str::FromStr;
 
 use crate::defaults::*;
 use crate::mode::*;
+use crate::persona::*;
 use crate::util;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Config {
   pub(crate) mode:           Mode,
+  pub(crate) persona:        Persona,
   pub(crate) llm_server_url: String,
   pub(crate) model:          String,
+
+  #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
   pub(crate) history_file:   String,
 }
 
 impl fmt::Display for Config {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    let history = {
+      #[cfg(any(feature = "tui", feature = "gui", feature = "web"))]
+      {
+        &self.history_file
+      }
+      #[cfg(not(any(feature = "tui", feature = "gui", feature = "web")))]
+      {
+        "N/A"
+      }
+    };
     write!(f,
 "
   -----------------------------------
@@ -25,6 +39,7 @@ impl fmt::Display for Config {
   -----------------------------------
 
     Mode:           {}
+    Persona:        {}
     LLM Server URL: {}
     Model:          {}
     History File:   {}
@@ -32,9 +47,10 @@ impl fmt::Display for Config {
   -----------------------------------
 ",
       self.mode,
+      self.persona.name,
       self.llm_server_url,
       self.model,
-      self.history_file,
+      history,
     )
   }
 }
@@ -43,8 +59,10 @@ impl Config {
   pub(crate) fn defaults() -> Config {
     Config {
       mode:           Mode::mode(),
+      persona:        Persona::new(DEFAULT_PERSONA),
       llm_server_url: DEFAULT_LLM_SERVER_URL.to_string(),
       model:          DEFAULT_MODEL.to_string(),
+      #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
       history_file:   DEFAULT_HISTORY_FILE.to_string(),
     }
   }
@@ -53,8 +71,10 @@ impl Config {
     let config_file: String = util::build_path(&config_file,&"config".to_string());
     let mut config: Vec<String> = Vec::new();
     config.push(format!("mode: {}",self.mode));
+    config.push(format!("persona: {}",self.persona.name));
     config.push(format!("llm_server_url: {}",self.llm_server_url));
     config.push(format!("model: {}",self.model));
+    #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
     config.push(format!("history_file: {}",self.history_file));
     match write(&config_file,config.join("\n")) {
       Ok(()) => Ok(format!("Outputted config to {}",config_file)),
@@ -68,9 +88,13 @@ impl Config {
       Ok(mode) => mode,
       Err(_)   => Default::default(),
     };
+    config.persona        = Persona::new(util::prompt(format!("Persona: ({}, default: {})",PERSONA_LIST,config.persona.name),config.persona.name).as_str());
     config.llm_server_url = util::prompt(format!("LLM Server URL: (default: {})",config.llm_server_url),config.llm_server_url.clone());
     config.model          = util::prompt(format!("Model: (default: {})",config.model),config.model.clone());
-    config.history_file   = util::prompt(format!("History Save File: (default: {})",config.history_file),config.history_file.clone());
+    #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
+    {
+      config.history_file   = util::prompt(format!("History Save File: (default: {})",config.history_file),config.history_file.clone());
+    }
     println!("\n");
     config
   }
@@ -113,8 +137,10 @@ impl Config {
             Ok(mode) => mode,
             Err(_)   => Default::default(),
           },
+          "persona"        => config.persona = Persona::new(value.as_str()),
           "llm_server_url" => config.llm_server_url = value.clone(),
           "model"          => config.model = value.clone(),
+          #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
           "history_file"   => config.history_file = value.clone(),
           // Ignore everything else:
           _ => {},
@@ -153,6 +179,10 @@ impl Config {
         // Ignore flags processed elsewhere:
         "--config" => {},
         // Process options:
+        "--persona" => match args.next() {
+          Some(value) => config.persona = Persona::new(value.trim()),
+          None => {},
+        },
         "--llm-server-url" => match args.next() {
           Some(value) => config.llm_server_url = value.trim().to_string(),
           None => {},
@@ -161,6 +191,7 @@ impl Config {
           Some(value) => config.model = value.trim().to_string(),
           None => {},
         },
+        #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
         "--history-file" => match args.next() {
           Some(value) => config.history_file = value.trim().to_string(),
           None => {},

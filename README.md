@@ -100,21 +100,25 @@ Just build it:
     cargo build --bins | Build it.
     cargo run          | Run it.
 
+Build with features used to make smaller binaries:
+
+    make all RELEASE_FLAG=""
+
+For all build targets (replace "all" above with the listed target):
+
+    make help
+
 ### Release:
 
-Compiling local:
+Compiling:
 
     cargo build --bins --release | Build it.
     cargo run --release          | Run it.
 
-If you want it portable but aren't cross compiling, use the appropriate for ARM and x86_64 (RISCV :
+Build with features used to make smaller binaries:
 
-    cargo build --bins --release --target=aarch64-unknown-linux-musl  | ARM
-    cargo build --bins --release --target=x86_64-unknown-linux-musl   | x86_64
+    make all
 
-Cross compiling:
+For all build targets (replace "all" above with the listed target):
 
-    cross build --bins --release --target=aarch64-unknown-linux-musl  | ARM
-    cross build --bins --release --target=x86_64-unknown-linux-musl   | x86_64
-    cross build --bins --release --target=riscv64gc-unknown-linux-gnu | RISC-V
-
+    make help

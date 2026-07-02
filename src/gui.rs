@@ -1,3 +1,5 @@
+#![cfg(feature = "gui")]
+
 use crossbeam_channel::{unbounded,Receiver};
 use eframe::egui;
 
@@ -8,7 +10,6 @@ use crate::defaults::*;
 ///////////// GUI
 
 #[derive(Clone)]
-#[allow(dead_code)]
 pub(crate) struct GUI {
   pub(crate) config: Config,
   pub(crate) chat: Chat,
@@ -23,7 +24,7 @@ pub(crate) struct GUI {
 impl GUI {
   pub(crate) fn new(config: &Config) -> GUI {
     let (send, recv) = unbounded::<StreamEvent>();
-    let initial_greeting = vec![(APP_NAME.to_string(),DEFAULT_GREETING.to_string())];
+    let initial_greeting = vec![(config.persona.name.clone(),config.persona.greeting.clone())];
     GUI {
       config: config.clone(),
       chat: Chat::new(&config,send),
@@ -39,13 +40,14 @@ impl GUI {
   pub(crate) fn run(self) {
     let options = eframe::NativeOptions {
       viewport: egui::ViewportBuilder::default()
-        .with_inner_size([800.0, 600.0]) 
-        .with_resizable(false),          
+        .with_resizable(false)          
+        .with_app_id(self.config.persona.name.clone()),
       ..Default::default()
     };
+    let title: String = self.config.persona.name.clone();
     let instance = self;
     let _ = eframe::run_native(
-      "Gromrik",
+      &title,
       options,
       Box::new(|cc| {
         egui_extras::install_image_loaders(&cc.egui_ctx);
@@ -79,7 +81,7 @@ impl eframe::App for GUI {
           self.scroll_to_bottom = true;
         }
         StreamEvent::Finished => {
-          self.history_lines.push((APP_NAME.to_string(), self.current_reply.clone()));
+          self.history_lines.push((self.config.persona.name.to_string(), self.current_reply.clone()));
           self.current_reply.clear();
           self.is_answering = false;
           self.scroll_to_bottom = true;
@@ -87,26 +89,22 @@ impl eframe::App for GUI {
       }
     }
     let image_source = egui::ImageSource::Bytes {
-      uri: std::borrow::Cow::Borrowed("bytes://gromrik_bg.png"),
-      bytes: egui::load::Bytes::from(GROMRIK_FULL_IMAGE),
+      uri: std::borrow::Cow::Borrowed("bytes://persona_bg.png"),
+      bytes: egui::load::Bytes::from(self.config.persona.full_image.clone()),
     };
     ui.add(
       egui::Image::new(image_source).max_size(egui::vec2(ui.available_width(), ui.available_height()))
     );
-    let left_pixel_x   = 555.0;
-    let top_pixel_y    = 35.0;
-    let panel_width    = 215.0;
-    let panel_height   = 500.0;
     let target_rect = egui::Rect::from_min_size(
-      egui::pos2(left_pixel_x, top_pixel_y),
-      egui::vec2(panel_width, panel_height)
+      egui::pos2(self.config.persona.dimensions.chat_left,self.config.persona.dimensions.chat_top),
+      egui::vec2(self.config.persona.dimensions.chat_width,self.config.persona.dimensions.chat_height),
     );
     let ui_builder = egui::UiBuilder::new()
       .max_rect(target_rect)
       .layout(egui::Layout::top_down(egui::Align::LEFT));
     ui.scope_builder(ui_builder, |ui| {
       egui::ScrollArea::vertical()
-        .max_height(panel_height)
+        .max_height(self.config.persona.dimensions.chat_height)
         .auto_shrink([false, false])
         .show(ui, |ui| {
           ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
@@ -127,7 +125,7 @@ impl eframe::App for GUI {
             }
             if self.is_answering && !self.current_reply.is_empty() {
               let header_font = egui::FontId::new(16.0, egui::FontFamily::Name("persona".into()));
-              ui.add(egui::Label::new(egui::RichText::new(format!("{}:", APP_NAME)).color(egui::Color32::from_rgb(194, 162, 105)).font(header_font)));
+              ui.add(egui::Label::new(egui::RichText::new(format!("{}:", self.config.persona.name)).color(egui::Color32::from_rgb(194, 162, 105)).font(header_font)));
               ui.add_space(4.0);
               let streaming_parchment_text = egui::RichText::new(self.current_reply.as_str()).color(egui::Color32::from_rgb(245, 235, 215));
               ui.add(egui::Label::new(streaming_parchment_text));
@@ -140,13 +138,9 @@ impl eframe::App for GUI {
           });
         });
     });
-    let input_left_x   = 560.0; 
-    let input_top_y    = 550.0;
-    let input_width    = 210.0; 
-    let input_height   = 30.0;
     let input_rect = egui::Rect::from_min_size(
-      egui::pos2(input_left_x, input_top_y),
-      egui::vec2(input_width, input_height)
+      egui::pos2(self.config.persona.dimensions.input_left,self.config.persona.dimensions.input_top),
+      egui::vec2(self.config.persona.dimensions.input_width,self.config.persona.dimensions.input_height),
     );
     let input_builder = egui::UiBuilder::new()
       .max_rect(input_rect)
@@ -162,9 +156,9 @@ impl eframe::App for GUI {
       let text_edit = egui::TextEdit::singleline(&mut self.input)
         .frame(subtle_input_frame)
         .margin(egui::Margin::ZERO)
-        .desired_width(input_width)
+        .desired_width(self.config.persona.dimensions.input_width)
         .text_color(egui::Color32::from_rgb(245,235,215)) 
-        .hint_text("Ask Gromrik...")
+        .hint_text(format!("Ask {}...",self.config.persona.name))
         .char_limit(60);
       let response = ui.add(text_edit);
       if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {

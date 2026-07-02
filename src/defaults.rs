@@ -4,6 +4,7 @@ use log::LevelFilter;
 use crate::logger::LogTarget;
 
 // Build Constants:
+
 pub(crate) const APP_NAME:   &str = "Gromrik";
 pub(crate) const BUILD_NAME: &str = env!("BUILD_NAME");
 pub(crate) const VERSION_ID: &str = env!("CARGO_PKG_VERSION");
@@ -12,6 +13,7 @@ pub(crate) const BUILD_ID:   &str = env!("BUILD_ID");
 pub(crate) const AUTHORS:    &str = env!("CARGO_PKG_AUTHORS");
 pub(crate) const COPYRIGHT:  &str = "2026";
 pub(crate) const LICENSE:    &str = env!("CARGO_PKG_LICENSE");
+
 
 // Logging Constants:
 pub(crate) const DEFAULT_LOG_LEVEL:            LevelFilter                                 = LevelFilter::Debug; // LevelFilter::Info;
@@ -24,20 +26,95 @@ pub(crate) const DEFAULT_LOG_FILE:             &'static str                     
 pub(crate) const DEFAULT_LOG_TARGET:           LogTarget                                   = LogTarget::File(DEFAULT_LOG_DIR, DEFAULT_LOG_FILE);
 pub(crate) const REDACT_LOG_LIST:              &str                                        = "config/redact_list.txt";
 
+
 // Path Constants:
+
 pub(crate) const DEFAULT_CONFIG_FILE:  &str = "config/gromrik.cfg";
+
+#[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
 pub(crate) const DEFAULT_HISTORY_FILE: &str = "history/history.json";
 
-// Gromrik Constants:
+
+// Control Constants:
+
 pub(crate) const DEFAULT_MODE:           &str = "gui";
 pub(crate) const DEFAULT_LLM_SERVER_URL: &str = "http://localhost:11434/api/chat";
 pub(crate) const DEFAULT_MODEL:          &str = "qwen2.5:7b";
-pub(crate) const GROMRIK_EMOJI:          &str = "\u{1F624}\u{26Cf}\u{FE0F}";
+#[cfg(any(feature = "cli",feature = "tui"))]
 pub(crate) const HUMAN_EMOJI:            &str = "\u{1F914}\u{1F4AC}";
-pub(crate) const DEFAULT_GREETING:       &str = "Bah! Why are you bothering me?";
 
-// Includes:
-pub(crate) const SYSTEM_PROMPT_TEMPLATE: &str  = include_str!("../resources/system_prompt.tpl");
-pub(crate) const GROMRIK_FULL_IMAGE:     &[u8] = include_bytes!("../resources/gromrik-full.png");
-pub(crate) const PERSONA_FONT:           &[u8] = include_bytes!("../resources/MedievalSharp-Regular.ttf");
-pub(crate) const DIALOGUE_FONT:          &[u8] = include_bytes!("../resources/EBGaramond-VariableFont_wght.ttf");
+
+// General Persona Constants:
+
+pub(crate) const DEFAULT_PERSONA: &str = {
+  #[cfg(feature = "gromrik")]
+  {
+    "gromrik"
+  }
+  #[cfg(all(feature = "lyranis",not(feature = "gromrik")))]
+  {
+    "lyranis"
+  }
+  #[cfg(all(not(feature = "lyranis"),not(feature = "gromrik")))]
+  {
+    "commoner"
+  }
+};
+#[cfg(all(feature = "gromrik", feature = "lyranis"))]
+pub(crate) const PERSONA_LIST: &str = "gromrik, lyranis, commoner";
+#[cfg(all(feature = "gromrik", not(feature = "lyranis")))]
+pub(crate) const PERSONA_LIST: &str = "gromrik, commoner";
+#[cfg(all(feature = "lyranis", not(feature = "gromrik")))]
+pub(crate) const PERSONA_LIST: &str = "lyranis, commoner";
+#[cfg(not(any(feature = "gromrik", feature = "lyranis")))]
+pub(crate) const PERSONA_LIST: &str = "commoner";
+
+// Gromrik Persona Constants:
+
+#[cfg(feature = "gromrik")]
+pub(crate) const GROMRIK_GREETING: &str = "Bah! Why are you bothering me?";
+#[cfg(all(feature = "gromrik",any(feature = "cli", feature = "tui")))]
+pub(crate) const GROMRIK_EMOJI:    &str = "\u{1F624}\u{26Cf}\u{FE0F}";
+
+// Lyranis Persona Constants:
+
+#[cfg(feature = "lyranis")]
+pub(crate) const LYRANIS_GREETING: &str = "I wonder... Oh! Fine greetings, stranger. Do you want something?";
+#[cfg(all(feature = "lyranis",any(feature = "cli", feature = "tui")))]
+pub(crate) const LYRANIS_EMOJI:    &str = "\u{1F9DD}\u{200D}\u{2640}\u{FE0F}\u{1F52E}";
+
+// Commoner Persona Constants:
+pub(crate) const COMMONER_GREETING:   &str = "Hello.";
+pub(crate) const COMMONER_PROMPT:     &str = "You are generic fantasy human commoner.";
+#[cfg(any(feature = "cli", feature = "tui"))]
+pub(crate) const COMMONER_EMOJI:      &str = "\u{1F9D1}";
+#[cfg(any(feature = "gui",feature = "web"))]
+pub(crate) const COMMONER_FULL_IMAGE: &[u8] = &[ 137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 10, 73, 68, 65, 84, 8, 29, 99, 0, 1, 0, 0, 5, 0, 1, 138, 109, 188, 32, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130 ];
+#[cfg(feature = "tui")]
+pub(crate) const COMMONER_TEXT_IMAGE: &str = "\u{1F9D1}";
+
+
+// General Includes:
+
+#[cfg(any(feature = "gui",feature = "web"))]
+pub(crate) const PERSONA_FONT:  &[u8] = include_bytes!("../resources/MedievalSharp-Regular.ttf");
+#[cfg(any(feature = "gui",feature = "web"))]
+pub(crate) const DIALOGUE_FONT: &[u8] = include_bytes!("../resources/EBGaramond-VariableFont_wght.ttf");
+
+// Gromrik Persona Includes:
+
+#[cfg(feature = "gromrik")]
+pub(crate) const GROMRIK_PROMPT:     &str  = include_str!("../resources/gromrik/gromrik_prompt.tpl");
+#[cfg(all(feature = "gromrik",any(feature = "gui", feature = "web")))]
+pub(crate) const GROMRIK_FULL_IMAGE: &[u8] = include_bytes!("../resources/gromrik/gromrik-full.png");
+#[cfg(all(feature = "gromrik",feature = "tui"))]
+pub(crate) const GROMRIK_TEXT_IMAGE: &str  = include_str!("../resources/gromrik/gromrik.txt");
+
+// Lyranis Persona Includes:
+
+#[cfg(feature = "lyranis")]
+pub(crate) const LYRANIS_PROMPT:     &str  = include_str!("../resources/lyranis/lyranis_prompt.tpl");
+#[cfg(all(feature = "lyranis",any(feature = "gui", feature = "web")))]
+pub(crate) const LYRANIS_FULL_IMAGE: &[u8] = include_bytes!("../resources/lyranis/lyranis-chat2.png");
+#[cfg(all(feature = "lyranis",feature = "tui"))]
+pub(crate) const LYRANIS_TEXT_IMAGE: &str  = include_str!("../resources/lyranis/lyranis.txt");

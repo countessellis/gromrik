@@ -1,3 +1,5 @@
+#![cfg(feature = "cli")]
+
 use crossbeam_channel::{unbounded,Receiver};
 
 use crate::chat::*;
@@ -8,6 +10,7 @@ use crate::defaults::*;
 
 #[derive(Clone)]
 pub(crate) struct CLI {
+  pub(crate) config: Config,
   pub(crate) chat: Chat,
   pub(crate) recv: Receiver<StreamEvent>,
 }
@@ -15,7 +18,11 @@ pub(crate) struct CLI {
 impl CLI {
   pub(crate) fn new(config: &Config) -> CLI {
     let (send, recv) = unbounded::<StreamEvent>();
-    CLI { recv: recv, chat: Chat::new(&config,send) }
+    CLI {
+     config: config.clone(),
+     chat:   Chat::new(&config,send),
+     recv:   recv,
+    }
   }
 
   pub(crate) fn run(&mut self) {
@@ -23,18 +30,18 @@ impl CLI {
 -----------------------------------
   {} AI. Type 'exit' to quit.
 -----------------------------------
-",APP_NAME);
-    println!("\n{}  {}:\n\n  {}",GROMRIK_EMOJI,APP_NAME,DEFAULT_GREETING);
+",self.config.persona.name);
+    println!("\n{}  {}:\n\n  {}",self.config.persona.emoji,self.config.persona.name,self.config.persona.greeting);
     loop {
-      let indent = "  "; // 4 spaces indentation
-      let max_width = 80;   // Wrap at 80 characters
+      let indent = "  ";
+      let max_width = 80;
       println!("\n{} You:\n",HUMAN_EMOJI);
       print!("{}",indent);
       std::io::Write::flush(&mut std::io::stdout()).ok();
       let mut input = String::new();
       if let Err(err) = std::io::stdin().read_line(&mut input) {
         log::error!("Failed to get user's message: {}", err);
-        println!("\n{}  {}:\nI can't even hear you!\n",GROMRIK_EMOJI,APP_NAME);
+        println!("\n{}  {}:\nI can't even hear you!\n",self.config.persona.emoji,self.config.persona.name);
         continue;
       }
       let input = input.trim().to_string();
@@ -46,10 +53,10 @@ impl CLI {
       }
       if let Err(err) = self.chat.chat(&input) {
         log::error!("Engine error: {}", err);
-        println!("\n{}  {}:\nBah! Leave me alone!\n",GROMRIK_EMOJI,APP_NAME);
+        println!("\n{}  {}:\nBah! Leave me alone!\n",self.config.persona.emoji,self.config.persona.name);
         continue;
       }
-      println!("\n{}  {}:\n",GROMRIK_EMOJI,APP_NAME);
+      println!("\n{}  {}:\n",self.config.persona.emoji,self.config.persona.name);
       print!("{}", indent);
       std::io::Write::flush(&mut std::io::stdout()).ok();
       let mut complete_answer = String::new();
@@ -58,7 +65,6 @@ impl CLI {
         match event {
           StreamEvent::Token(token) => {
             complete_answer.push_str(&token);
-            
             for ch in token.chars() {
               if ch == '\n' {
                 print!("\n{}", indent);

@@ -10,25 +10,75 @@ version = "1.0.1"
 edition = "2024"
 default-run = "gromrik"
 
+[features]
+default = ["gromrik","lyranis","cli","tui","gui","web"]
+gromrik = []
+lyranis = []
+cli = []
+tui = []
+gui = []
+web = []
+
+[[bin]]
+name = "chat"
+path = "src/main.rs"
+required-features = ["gromrik","lyranis","cli","tui","gui","web"]
+
+[[bin]]
+name = "commoner"
+path = "src/bin/commoner.rs"
+required-features = ["cli","tui","gui","web"]
+
 [[bin]]
 name = "gromrik"
-path = "src/main.rs"
+path = "src/bin/gromrik.rs"
+required-features = ["gromrik","cli","tui","gui","web"]
 
 [[bin]]
 name = "gromrik-cli"
-path = "src/bin/cli.rs"
+path = "src/bin/gromrik-cli.rs"
+required-features = ["gromrik","cli"]
 
 [[bin]]
 name = "gromrik-tui"
-path = "src/bin/tui.rs"
+path = "src/bin/gromrik-tui.rs"
+required-features = ["gromrik","tui"]
 
 [[bin]]
 name = "gromrik-gui"
-path = "src/bin/gui.rs"
+path = "src/bin/gromrik-gui.rs"
+required-features = ["gromrik","gui"]
 
 [[bin]]
 name = "gromrik-web"
-path = "src/bin/web.rs"
+path = "src/bin/gromrik-web.rs"
+required-features = ["gromrik","web"]
+
+[[bin]]
+name = "lyranis"
+path = "src/bin/lyranis.rs"
+required-features = ["lyranis","cli","tui","gui","web"]
+
+[[bin]]
+name = "lyranis-cli"
+path = "src/bin/lyranis-cli.rs"
+required-features = ["lyranis","cli"]
+
+[[bin]]
+name = "lyranis-tui"
+path = "src/bin/lyranis-tui.rs"
+required-features = ["lyranis","tui"]
+
+[[bin]]
+name = "lyranis-gui"
+path = "src/bin/lyranis-gui.rs"
+required-features = ["lyranis","gui"]
+
+[[bin]]
+name = "lyranis-web"
+path = "src/bin/lyranis-web.rs"
+required-features = ["lyranis","web"]
+
 
 [lib]
 name = "gromrik"
@@ -43,6 +93,7 @@ eframe = "0.35"
 egui_extras = { version = "0.35", features = ["all_loaders"] }
 env_logger = "0.11"
 image = { version = "0.25", features = ["png"] }
+imagesize = "0.14.0"
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false }
 ratatui = "0.30"
@@ -52,6 +103,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 ureq = { version = "3.3", features = ["json"] }
 url = "2.5"
+winit = "0.30.13"
 
 [build-dependencies]
 chrono = "0.4"

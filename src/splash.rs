@@ -13,7 +13,7 @@ Licensed under the {} License
 }
 
 pub(crate) fn raw_splash() -> String {
-  let splash: &str =  include_str!("../resources/gromrik.txt");
+  let splash: &str =  include_str!("../resources/gromrik/gromrik.txt");
   format!("\n{}\n",splash)
 }
 

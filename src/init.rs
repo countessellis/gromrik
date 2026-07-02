@@ -10,6 +10,9 @@ pub fn run() {
   log::info!("{}",version());
   let config: Config = Config::get_config();
   log::info!("{}",config);
-  let mut ui: UI = UI::new(&config);
-  ui.run();
+  #[cfg(any(feature = "cli", feature = "tui", feature = "gui", feature = "web"))]
+  {
+    let mut ui: UI = UI::new(&config);
+    ui.run();
+  }
 }
