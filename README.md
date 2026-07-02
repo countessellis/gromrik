@@ -84,6 +84,20 @@ This can be set in the config file with history_file, or from the command line:
 
     --history-file <file path>
 
+### Persona
+
+The compiled in persona to interact with.
+
+Options:
+
+    gromrik  | Interact with Gromriki, the default.
+    lyranis  | Interact with Lyranis.
+    commoner | Interact with a random commoner.
+
+Thsi can be set in the config file with persona, or from the command line:
+
+    --persona <persona>
+
 ## Building Gromrik
 
 ### Init
