@@ -14,6 +14,8 @@ pub use std::path::Path;
 
 use crate::config::*;
 
+use crate::util;
+
 #[derive(Clone)]
 pub(crate) struct Chat {
   pub(crate) config:  Config,
@@ -66,7 +68,7 @@ impl Chat {
     let agent = ureq::Agent::new_with_config(agent_config);
     let history: Vec<Message> = vec![Message {
       role: "system".into(),
-      content: Self::render(&config.persona.prompt,&HashMap::new()),
+      content: util::render(&config.persona.prompt,&HashMap::new()),
     }];
     Chat {
       config:  config.clone(),
@@ -158,14 +160,6 @@ impl Chat {
       },
       Err(err) => return Err(format!("Request to {} failed: {}",req.model,err)),
     }
-  }
-
-  pub(crate) fn render(template: &str, fields: &HashMap<&str,String>) -> String {
-    let mut prompt: String = template.to_string();
-    for (key,value) in fields {
-      prompt = prompt.replace(&format!("{{{{{}}}}}",key.to_uppercase()),value);
-    }
-    prompt
   }
 
   #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]

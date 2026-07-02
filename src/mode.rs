@@ -12,6 +12,7 @@ pub(crate) enum Mode {
   TUI,
   GUI,
   WEB,
+  Help,
 }
 
 impl Default for Mode {
@@ -37,6 +38,7 @@ impl FromStr for Mode {
       "tui"  => Ok(Mode::TUI),
       "gui"  => Ok(Mode::GUI),
       "web"  => Ok(Mode::WEB),
+      "help" => Ok(Mode::Help),
       _      => Ok(Default::default()),
     }
   }
@@ -45,10 +47,11 @@ impl FromStr for Mode {
 impl fmt::Display for Mode {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     let mode: &str = match self {
-      Mode::CLI => "cli",
-      Mode::TUI => "tui",
-      Mode::GUI => "gui",
-      Mode::WEB => "web",
+      Mode::CLI  => "cli",
+      Mode::TUI  => "tui",
+      Mode::GUI  => "gui",
+      Mode::WEB  => "web",
+      Mode::Help => "help",
     };
     write!(f, "{}",mode)
   }
@@ -67,10 +70,11 @@ impl Mode {
           },
           None        => {},
         },
-        "--cli" => return Mode::CLI,
-        "--tui" => return Mode::TUI,
-        "--gui" => return Mode::GUI,
-        "--web" => return Mode::WEB,
+        "--cli"  => return Mode::CLI,
+        "--tui"  => return Mode::TUI,
+        "--gui"  => return Mode::GUI,
+        "--web"  => return Mode::WEB,
+        "--help" => return Mode::Help,
         _ => {},
       }
     }

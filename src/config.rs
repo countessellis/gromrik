@@ -11,6 +11,7 @@ use crate::util;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Config {
+  pub(crate) ranas:          String,
   pub(crate) mode:           Mode,
   pub(crate) persona:        Persona,
   pub(crate) llm_server_url: String,
@@ -58,6 +59,7 @@ impl fmt::Display for Config {
 impl Config {
   pub(crate) fn defaults() -> Config {
     Config {
+      ranas:          util::bin_name(),
       mode:           Mode::mode(),
       persona:        Persona::new(DEFAULT_PERSONA),
       llm_server_url: DEFAULT_LLM_SERVER_URL.to_string(),
@@ -207,6 +209,7 @@ impl Config {
         "--tui" => config.mode = Mode::TUI,
         "--gui" => config.mode = Mode::GUI,
         "--web" => config.mode = Mode::WEB,
+        "--help" => config.mode = Mode::Help,
         // Error on everything else:
         option => if option.starts_with("--") { log::error!("{}: unrecognized option -- '{}'",util::bin_name(),option);
         },

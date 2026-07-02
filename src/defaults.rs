@@ -5,14 +5,15 @@ use crate::logger::LogTarget;
 
 // Build Constants:
 
-pub(crate) const APP_NAME:   &str = "Gromrik";
-pub(crate) const BUILD_NAME: &str = env!("BUILD_NAME");
-pub(crate) const VERSION_ID: &str = env!("CARGO_PKG_VERSION");
-pub(crate) const BUILD_TIME: &str = env!("BUILD_TIME");
-pub(crate) const BUILD_ID:   &str = env!("BUILD_ID");
-pub(crate) const AUTHORS:    &str = env!("CARGO_PKG_AUTHORS");
-pub(crate) const COPYRIGHT:  &str = "2026";
-pub(crate) const LICENSE:    &str = env!("CARGO_PKG_LICENSE");
+pub(crate) const APP_NAME:    &str = "Gromrik";
+pub(crate) const BUILD_NAME:  &str = env!("BUILD_NAME");
+pub(crate) const VERSION_ID:  &str = env!("CARGO_PKG_VERSION");
+pub(crate) const BUILD_TIME:  &str = env!("BUILD_TIME");
+pub(crate) const BUILD_ID:    &str = env!("BUILD_ID");
+pub(crate) const AUTHORS:     &str = env!("CARGO_PKG_AUTHORS");
+pub(crate) const COPYRIGHT:   &str = "2026";
+pub(crate) const DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
+pub(crate) const LICENSE:     &str = env!("CARGO_PKG_LICENSE");
 
 
 // Logging Constants:
@@ -37,7 +38,49 @@ pub(crate) const DEFAULT_HISTORY_FILE: &str = "history/history.json";
 
 // Control Constants:
 
-pub(crate) const DEFAULT_MODE:           &str = "gui";
+pub(crate) const DEFAULT_MODE:           &str = {
+  #[cfg(feature = "gui")]
+  {
+    "gui"
+  }
+  #[cfg(all(feature = "tui",not(feature = "gui")))]
+  {
+    "tui"
+  }
+  #[cfg(all(feature = "cli",not(feature = "tui"),not(feature = "gui")))]
+  {
+    "cli"
+  }
+  #[cfg(all(feature = "web",not(feature = "cli"),not(feature = "tui"),not(feature = "gui")))]
+  {
+    "web"
+  }
+  #[cfg(all(not(feature = "web"),not(feature = "cli"),not(feature = "tui"),not(feature = "gui")))]
+  {
+    "help"
+  }
+};
+pub(crate) const MODE_LIST:             &[&str] = &[
+  #[cfg(feature = "cli")]
+  { 
+    "cli"
+  },
+  #[cfg(feature = "tui")]
+  { 
+    "tui"
+  },
+  #[cfg(feature = "gui")]
+  { 
+    "gui"
+  },
+  #[cfg(feature = "web")]
+  { 
+    "web"
+  },
+  { 
+    "help"
+  }
+];
 pub(crate) const DEFAULT_LLM_SERVER_URL: &str = "http://localhost:11434/api/chat";
 pub(crate) const DEFAULT_MODEL:          &str = "qwen2.5:7b";
 #[cfg(any(feature = "cli",feature = "tui"))]
@@ -96,6 +139,7 @@ pub(crate) const COMMONER_TEXT_IMAGE: &str = "\u{1F9D1}";
 
 // General Includes:
 
+pub(crate) const HELP_TEMPLATE: &str  = include_str!("../resources/help.tpl");
 #[cfg(any(feature = "gui",feature = "web"))]
 pub(crate) const PERSONA_FONT:  &[u8] = include_bytes!("../resources/MedievalSharp-Regular.ttf");
 #[cfg(any(feature = "gui",feature = "web"))]

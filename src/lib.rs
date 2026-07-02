@@ -14,6 +14,7 @@ pub(crate) mod cli;
 pub(crate) mod config;
 pub(crate) mod defaults;
 pub(crate) mod gui;
+pub(crate) mod help;
 pub(crate) mod mode;
 pub(crate) mod persona;
 pub(crate) mod splash;

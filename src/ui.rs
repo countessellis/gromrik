@@ -11,6 +11,7 @@ use crate::web::*;
 
 use crate::config::*;
 use crate::defaults::*;
+use crate::help::*;
 use crate::mode::*;
 
 ///////////// UI
@@ -26,6 +27,7 @@ pub(crate) enum UI {
   GUI(GUI),
   #[cfg(feature = "web")]
   WEB(WEB),
+  Help(Help),
   None,
 }
 
@@ -68,6 +70,7 @@ impl UI {
       Mode::GUI  => UI::GUI(GUI::new(config)),
       #[cfg(feature = "web")]
       Mode::WEB  => UI::WEB(WEB::new(config)),
+      Mode::Help => UI::Help(Help::new(&config)),
       #[cfg(not(all(feature = "cli",feature = "tui",feature = "gui",feature = "web")))]
       _          => UI::None,
     }
@@ -76,14 +79,15 @@ impl UI {
   pub(crate) fn run(&mut self) {
     match self {
       #[cfg(feature = "cli")]
-      UI::CLI(cli) => cli.run(),
+      UI::CLI(cli)   => cli.run(),
       #[cfg(feature = "tui")]
-      UI::TUI(tui) => tui.run(),
+      UI::TUI(tui)   => tui.run(),
       #[cfg(feature = "gui")]
-      UI::GUI(_)   => if let UI::GUI(owned_gui) = std::mem::take(self) { owned_gui.run(); },
+      UI::GUI(_)     => if let UI::GUI(owned_gui) = std::mem::take(self) { owned_gui.run(); },
       #[cfg(feature = "web")]
-      UI::WEB(web) => web.run(),
-      UI::None     => {},
+      UI::WEB(web)   => web.run(),
+      UI::Help(help) => println!("{}",help),
+      UI::None       => {},
     }
   }
 }

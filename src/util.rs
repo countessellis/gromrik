@@ -1,4 +1,5 @@
 use std::{
+  collections::HashMap,
   env,
   fs,
   io::{Write,stdout,stdin},
@@ -56,5 +57,13 @@ pub(crate) fn bin_name() -> String {
     Err(_) => {},
   }
   BUILD_NAME.to_string()
+}
+
+pub(crate) fn render(template: &str, fields: &HashMap<&str,String>) -> String {
+  let mut prompt: String = template.to_string();
+  for (key,value) in fields { 
+    prompt = prompt.replace(&format!("{{{{{}}}}}",key.to_uppercase()),value);
+  }
+  prompt
 }
 
