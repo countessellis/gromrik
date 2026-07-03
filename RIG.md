@@ -1,10 +1,10 @@
 # AI Rig Setup and Optimization
 
-Below is details on the AI rig I wrote Gromrik against, and optimizations I performed. This both is very small resource wise compared to what is typically used for similar workloads. This is intentional.
+Below is details on the AI rig I wrote Gromrik against, and optimizations I performed. This is both very small resource-wise compared to what is typically used for similar workloads. This is intentional.
 
 ## Minerva
 
-I named my AI rig **minerva** after the Roman goddess, the rough equivilant of Athena, who I see as the Greek goddess of technology, in a modern sense. For home stuff, I usually name my machines and devices after figures from mythology, usually Greek, Roman, Etruscan, or Norse, choosing one appropriate for the role of the device. The name Minerva likely has its roots in *menos*, "thought", or *meh-nos*, "moon". Among other associations, Minerva was the goddess of wisdon, law, trade, and strategy. Seemed quite apropos for an AI rig.
+I named my AI rig **minerva** after the Roman goddess, the rough equivalant of Athena, who I see as the Greek goddess of technology, in a modern sense. For home stuff, I usually name my machines and devices after figures from mythology, usually Greek, Roman, Etruscan, or Norse, choosing one appropriate for the role of the device. The name Minerva likely has its roots in *menos*, "thought", or *meh-nos*, "moon". Among other associations, Minerva was the goddess of wisdon, law, trade, and strategy. Seemed quite apropos for an AI rig.
 
 
 ## Hardware
@@ -24,9 +24,9 @@ The hardware I am using for my AI rig for this project is as follows:
 
 ## Operating System
 
-I am running Ubuntu Server 24.04 LTS on my AI rig currently. Any linux distribution will work for parallel setup. Note, if you use a different distribution, many commands below and file paths will be different, so if you want to implement the optimizations described, you will have to adapt them.
+I am running Ubuntu Server 24.04 LTS on my AI rig currently. Any Linux distribution will work for a parallel setup. Note, if you use a different distribution, many commands below and file paths will be different, so if you want to implement the optimizations described, you will have to adapt them.
 
-It is perfectly valid and has some advantages to use Windows 11, but the OS has more overhead both for memory and CPU/GPU, so you would likely need more resources. MacOS is also an execellant option, but requires Apple hardware, so won't run on the equivalant hardware to my AI rig. The rest of this doc applies to Linux, not Windows of MacOS, so you'll want to research optimizations under those operationg systems and/or figure out what the equivalent to the things listed here are.
+It is perfectly valid and has some advantages to use Windows 11, but the OS has more overhead both for memory and CPU/GPU, so you would likely need more resources. MacOS is also an execellant option, but requires Apple hardware, so won't run on the equivalant hardware to my AI rig. The rest of this doc applies to Linux, not Windows or MacOS, so you'll want to research optimizations under those operationg systems and/or figure out what equivalent to the things listed here are.
 
 ### OS Installation
 
@@ -34,7 +34,7 @@ It is perfectly valid and has some advantages to use Windows 11, but the OS has 
 
 [Ubuntu Server Download](https://ubuntu.com/download/server)
 
-2. Burn the image to a USB stick at least 8GB size. I use dd to burn it on Linux on my laptop. There are plenty of burn software for Linux, Windows, and MacOS if you'd prefer something more user friendly.
+2. Burn the image to a USB stick at least 8GB size. I use dd to burn it on Linux on my laptop. There are plenty of burn software for Linux, Windows, and MacOS if you'd prefer something more user-friendly.
 
 
     sudo su -                                           # Change to root, if you haven't already.
@@ -50,11 +50,11 @@ It is perfectly valid and has some advantages to use Windows 11, but the OS has 
 
 6. When prompted for the type, choose Ubuntu Server (minimized).
 
-7. Configure your network connection. I have a complex home network, and run the box on an isolated network where it can connect to the internet and other things can connect to locally, but it can't connect to them.
+7. Configure your network connection. I have a complex home network, and run the box on an isolated network where it can connect to the internet and other things can connect to it locally, but it can't connect to them.
 
-8. You can play with the disk configuration for what suits you, for security or ease of use. For this, I went simple, LVM with one volume, I used half but can exand later if needed, giving me flexibility. I also went with swap file instead of swap volume, for dynamic resizing.
+8. You can play with the disk configuration for what suits you, for security or ease of use. For this, I went simple, LVM with one volume, I used half but can expand later if needed, giving me flexibility. I also went with swap file instead of swap volume, for dynamic resizing.
 
-9. Create your user profile. This is the primary unpriveleged user with sudo privileges.
+9. Create your user profile. This is the primary unprivileged user with sudo privileges.
 
 10. When prompted, choose install OpenSSH Server, this is how you'll manage the box remotely.
 
@@ -69,7 +69,7 @@ I have both Ollama and Lemonade installed, and Gromrik is compatible with both (
 
 ### Utils and Prerequisite Installation:
 
-First, well install packages needed for optimatization and management, and prereqs for the main packages:
+First, we'll install packages needed for optimization and management, and prereqs for the main packages:
 
     sudo su -                                                                                                      # Change to root if you aren't already.
     apt update                                                                                                     # Update the package list.
@@ -105,13 +105,13 @@ Same drill.
 
 ### Open WebUI Installation
 
-While Open WebUI isn't needed for Gromrik, it is needed if you want a direct web based chat or if you want to manage models and such from a GUI instead of command line.
+While Open WebUI isn't needed for Gromrik, it is needed if you want a direct web-based chat client or if you want to manage models and such from a GUI instead of command line.
 
     docker pull ghcr.io/open-webui/open-webui:main                                                                  # Pull the Open WebAI image.
     docker run -d --network=host -v open-webui:/app/backend/data -e OLLAMA_BASE_URL=http://127.0.0.1:11434 \        # Start the container.
       --name open-webui --restart always ghcr.io/open-webui/open-webui:main
 
-You should be able to connect on Open WebUI on http://<HOST_NAME>:8080 or http://<IP_ADDRESS>:8080. I'm not including configuration for it in this doc. Note that if you want to use HTTPS (TLS encryption) instead of HTTP (unecrypted), best approach is to set that up in Nginx so you can use one cert and setup for Open WebUI, Ollama, and Lemonade. For my local setup, I'm not currently worrying about that.
+You should be able to connect on Open WebUI on http://<HOST_NAME>:8080 or http://<IP_ADDRESS>:8080. I'm not including configuration for it in this doc. Note that if you want to use HTTPS (TLS encryption) instead of HTTP (unencrypted), best approach is to set that up in Nginx so you can use one cert and setup for Open WebUI, Ollama, and Lemonade. For my local setup, I'm not currently worrying about that.
 
 
 ### Configure Nginx Reverse Proxy
@@ -323,14 +323,14 @@ systemctl disable --now iscsid.socket
 
 ### Disable Wifi
 
-Wifi, even inactive, will increase interrupts and heat, doing scans. It it highly recommended only use hard wired network on the AI rig. If you have to use wifi, skip this section.
+Wifi, even inactive, will increase interrupts and heat, doing scans. It is highly recommended to only use hard wired network on the AI rig. If you have to use wifi, skip this section.
 
 1. Determine what wifi interfaces you have, if any:
 ```bash
 ip link | grep -o 'wl[^:]*'
 ```
 2. Edit the files in /etc/netplan
-3. Delete any section called `wifis:` and any lines containing the interfactes from the previous command.
+3. Delete any section called `wifis:` and any lines containing the interfaces from the previous command.
 4. Apply the modified plan:
 ```bash
 netplan apply
