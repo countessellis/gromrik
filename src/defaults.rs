@@ -82,7 +82,7 @@ pub(crate) const MODE_LIST:             &[&str] = &[
   }
 ];
 pub(crate) const DEFAULT_LLM_SERVER_URL: &str = "http://localhost:11434/api/chat";
-pub(crate) const DEFAULT_MODEL:          &str = "qwen2.5:7b";
+pub(crate) const DEFAULT_MODEL:          &str = "qwen2.5:7b-instruct-q4_K_M";
 #[cfg(any(feature = "cli",feature = "tui"))]
 pub(crate) const HUMAN_EMOJI:            &str = "\u{1F914}\u{1F4AC}";
 

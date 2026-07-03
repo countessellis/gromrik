@@ -22,6 +22,7 @@ use crate::util;
 pub(crate) struct Chat {
   pub(crate) config:  Config,
   pub(crate) agent:   ureq::Agent,
+  pub(crate) system:  Message,
   pub(crate) history: Vec<Message>,
   pub(crate) send:    Sender<StreamEvent>,
 }
@@ -34,10 +35,11 @@ pub(crate) struct Message {
 
 #[derive(Serialize)]
 pub(crate) struct ChatRequest {
-  pub(crate) model:    String,
-  pub(crate) stream:   bool,
-  pub(crate) messages: Vec<Message>,
-  pub(crate) options: Option<OllamaOptions>,
+  pub(crate) model:      String,
+  pub(crate) stream:     bool,
+  pub(crate) keep_alive: String,
+  pub(crate) messages:   Vec<Message>,
+  pub(crate) options:    Option<OllamaOptions>,
 }
 
 #[derive(Deserialize)]
@@ -54,6 +56,9 @@ pub(crate) struct OllamaOptions {
   pub(crate) temperature: f32,
   pub(crate) num_ctx: u32,
   pub(crate) top_p: f32,
+  pub(crate) microstat: u32,
+  pub(crate) microstat_eta: f32,
+  pub(crate) microstat_tau: f32,
 }
 
 #[derive(Clone)]
@@ -71,6 +76,10 @@ impl Chat {
     let mut chat: Chat = Chat {
       config:  config.clone(),
       agent:   agent.clone(),
+      system:  Message {
+        role:    "system".into(),
+        content: util::render(&config.persona.prompt,&HashMap::new()),
+      },
       history: Vec::new(),
       send:    send,
     };
@@ -113,61 +122,54 @@ impl Chat {
           ("BACKSTORY",bio.clone()),
         ]);
         chat.config.persona.name = name.clone();
-        chat.history = vec![
-          Message {
-            role:    "system".to_string(),
-            content: util::render(&config.persona.prompt,&fields),
-          },
-          Message {
-            role:    "assistant".into(),
-            content: config.persona.greeting.clone(),
-          },
-        ];
-      } else {
-        log::warn!("Failed to initialize commoner, it will be easily confused: Output invalid: {}",response);
-        chat.history = vec![
-          Message {
-            role:    "system".to_string(),
-            content: "You are generic fantasy human commoner.".to_string(),
-          },
-          Message {
-            role:    "assistant".into(),
-            content: config.persona.greeting.clone(),
-          },
-        ];
-      }
-    } else {
-      chat.history = vec![
-        Message {
-          role:    "system".into(),
-          content: util::render(&config.persona.prompt,&HashMap::new()),
-        },
-        Message {
+        chat.system = Message {
+          role:    "system".to_string(),
+          content: util::render(&config.persona.prompt,&fields),
+        };
+        chat.history = vec![Message {
           role:    "assistant".into(),
           content: config.persona.greeting.clone(),
-        },
-      ];
+        }];
+      } else {
+        log::warn!("Failed to initialize commoner, it will be easily confused: Output invalid: {}",response);
+        chat.system = Message {
+          role:    "system".to_string(),
+          content: "You are generic fantasy human commoner.".to_string(),
+        };
+        chat.history = vec![Message {
+          role:    "assistant".into(),
+          content: config.persona.greeting.clone(),
+        }];
+      }
+    } else {
+      chat.history = vec![Message {
+        role:    "assistant".into(),
+        content: config.persona.greeting.clone(),
+      }];
     }
     chat
   }
 
   pub(crate) fn chat(&mut self,input: &str) -> Result<(),String> {
-    self.history.push(Message {
+    let new_msg = Message {
       role: "user".into(),
       content: input.to_string(),
-    });
-    let len = self.history.len();
-    let hist_without_last = if len > 0 {
-      self.history[..len - 1].to_vec()
-    } else {
-      self.history.clone()
     };
+    let len = self.history.len();
+    let messages: Vec<Message> = vec![
+      self.system.clone(),
+      Message {
+        role: "system".into(),
+        content: format!("[OLD MEMORY LOG - ONLY reference this if the user uses pronouns like 'instead' or 'that'\n{}",self.history.clone().into_iter().map(|msg| format!("{}: {}",msg.role,msg.content)).collect::<Vec<String>>().join("\n")),
+      },
+    ];
+    self.history.push(new_msg.clone());
     let config_clone = self.config.clone();
     let agent_clone  = self.agent.clone();
     let send_clone   = self.send.clone(); 
     let input_clone  = input.to_string();
     std::thread::spawn(move || {
-      if let Err(err) = Self::submit(&config_clone,&agent_clone,send_clone,&hist_without_last,&input_clone) {
+      if let Err(err) = Self::submit(&config_clone,&agent_clone,send_clone,&messages,&input_clone) {
         log::error!("Submit execution failed in background thread: {}", err);
       }
     });
@@ -183,10 +185,11 @@ impl Chat {
     let req = ChatRequest {
       model: config.model.clone(),
       stream: true,
+      keep_alive: "30m".to_string(),
       messages,
-      options: Some(OllamaOptions { temperature: 0.75, num_ctx: 2048, top_p: 0.9 }),
+      options: Some(OllamaOptions { temperature: 0.85, num_ctx: 8192, top_p: 0.9, microstat: 2, microstat_eta: 0.5, microstat_tau: 4.5 }),
     };
-    match agent.post(&config.llm_server_url).send_json(&req) {
+    match agent.post(&config.llm_server_url).header("Connection", "close").send_json(&req) {
       Ok(mut resp) => {
         if resp.status().is_client_error() || resp.status().is_server_error() {
           let mut err_body: String = String::new();
