@@ -14,6 +14,7 @@ There is also a second character, Lyranis, a dreamy elven illusionist. She might
 ## Reference
 
 [Licensing Information](LICENSING.md)
+[AI Rig Setup and Optimization](RIG.md)
 
 
 ## Usage
