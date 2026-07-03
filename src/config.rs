@@ -121,6 +121,7 @@ impl Config {
         return Config::defaults()
       }
     };
+    log::info!("Loading config from {}.",config_file);
     println!("Loading config from {}.\n",config_file);
     let lines: Vec<String> = match read_to_string(&config_file) {
       Ok(lines) => lines,

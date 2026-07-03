@@ -1,2 +1,4 @@
-Generate a fitting fantasy commoner name and a 2-sentence humble backstory.
-Reply ONLY in this format: NAME: [Name] | BACKSTORY: [Backstory]
+Generate a fitting, unique fantasy commoner identity with a slightly {{TRAIT}} disposition.
+You must invent a unique name and a matching 2-sentence humble backstory.
+Reply ONLY in this format and say nothing else: NAME: [Name] | BACKSTORY: [Backstory]
+

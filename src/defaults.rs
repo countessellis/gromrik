@@ -127,15 +127,14 @@ pub(crate) const LYRANIS_GREETING: &str = "I wonder... Oh! Fine greetings, stran
 pub(crate) const LYRANIS_EMOJI:    &str = "\u{1F9DD}\u{200D}\u{2640}\u{FE0F}\u{1F52E}";
 
 // Commoner Persona Constants:
-pub(crate) const COMMONER_GREETING:      &str = "Hello.";
-pub(crate) const COMMONER_INIT_PROMPT:   &str = include_str!("../resources/commoner_init_prompt.tpl");
-pub(crate) const COMMONER_SYSTEM_PROMPT: &str = include_str!("../resources/commoner_system_prompt.tpl");
+pub(crate) const COMMONER_TRAITS:        &[&str] = &["rustic", "weathered", "cheerful", "anxious", "rebellious", "humble", "curious", "shrewd"];
+pub(crate) const COMMONER_GREETING:      &str    = "Hello.";
 #[cfg(any(feature = "cli", feature = "tui"))]
-pub(crate) const COMMONER_EMOJI:         &str = "\u{1F9D1}";
+pub(crate) const COMMONER_EMOJI:         &str    = "\u{1F9D1}";
 #[cfg(any(feature = "gui",feature = "web"))]
-pub(crate) const COMMONER_FULL_IMAGE:    &[u8] = &[ 137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 10, 73, 68, 65, 84, 8, 29, 99, 0, 1, 0, 0, 5, 0, 1, 138, 109, 188, 32, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130 ];
+pub(crate) const COMMONER_FULL_IMAGE:    &[u8]   = &[ 137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 10, 73, 68, 65, 84, 8, 29, 99, 0, 1, 0, 0, 5, 0, 1, 138, 109, 188, 32, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130 ];
 #[cfg(feature = "tui")]
-pub(crate) const COMMONER_TEXT_IMAGE:    &str = "\u{1F9D1}";
+pub(crate) const COMMONER_TEXT_IMAGE:    &str    = "\u{1F9D1}";
 
 
 // General Includes:
@@ -163,3 +162,8 @@ pub(crate) const LYRANIS_PROMPT:     &str  = include_str!("../resources/lyranis/
 pub(crate) const LYRANIS_FULL_IMAGE: &[u8] = include_bytes!("../resources/lyranis/lyranis-chat2.png");
 #[cfg(all(feature = "lyranis",feature = "tui"))]
 pub(crate) const LYRANIS_TEXT_IMAGE: &str  = include_str!("../resources/lyranis/lyranis.txt");
+
+// Commoner Includes:
+
+pub(crate) const COMMONER_INIT_PROMPT:   &str    = include_str!("../resources/commoner_init_prompt.tpl");
+pub(crate) const COMMONER_SYSTEM_PROMPT: &str    = include_str!("../resources/commoner_system_prompt.tpl");

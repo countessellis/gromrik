@@ -75,11 +75,21 @@ impl Chat {
       send:    send,
     };
     if config.persona.name == "Commoner".to_string() {
+      log::info!("Generating commoner details.");
+      println!("Generating commoner details.\n");
+      let time_index = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs() as usize % COMMONER_TRAITS.len();
+      let random_trait = COMMONER_TRAITS[time_index];
+      let fields: HashMap<&str,String> = HashMap::from([
+        ("TRAIT",random_trait.to_string()),
+      ]);
       let (send, recv) = unbounded::<StreamEvent>();
       let config_clone = config.clone();
       let agent_clone  = agent.clone();
       std::thread::spawn(move || {
-        if let Err(err) = Self::submit(&config_clone,&agent_clone,send,&Vec::new(),&COMMONER_INIT_PROMPT) {
+        if let Err(err) = Self::submit(&config_clone,&agent_clone,send,&Vec::new(),&util::render(COMMONER_INIT_PROMPT,&fields)) {
           log::error!("Submit execution failed in background thread: {}", err);
         }
       });

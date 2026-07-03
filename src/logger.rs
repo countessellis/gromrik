@@ -80,6 +80,8 @@ pub fn init() {
     .filter_module("winit",log::LevelFilter::Info)
     .filter_module("naga",log::LevelFilter::Info)
     .filter_module("wgpu_hal",log::LevelFilter::Info)
+    .filter_module("wgpu_core",log::LevelFilter::Info)
+    .filter_module("sctk",log::LevelFilter::Info)
     .target(DEFAULT_LOG_TARGET.into_env_logger_target())
     .format(move |buf, record| {
       let original_msg = format!("{}", record.args());
