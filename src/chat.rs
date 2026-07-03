@@ -155,7 +155,6 @@ impl Chat {
       role: "user".into(),
       content: input.to_string(),
     };
-    let len = self.history.len();
     let messages: Vec<Message> = vec![
       self.system.clone(),
       Message {
