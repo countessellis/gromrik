@@ -5,6 +5,7 @@ use std::time::Duration;
 use std::io::BufReader;
 use std::io::BufRead;
 use crossbeam_channel::Sender;
+use crossbeam_channel::unbounded;
 #[cfg(any(feature = "tui", feature = "gui", feature = "web"))]
 pub use std::fs::{self,File};
 #[cfg(any(feature = "tui", feature = "gui", feature = "web"))]
@@ -13,6 +14,7 @@ pub use std::io::Write;
 pub use std::path::Path;
 
 use crate::config::*;
+use crate::defaults::*;
 
 use crate::util;
 
@@ -66,16 +68,77 @@ impl Chat {
   pub(crate) fn new(config: &Config, send: Sender<StreamEvent>) -> Chat {
     let agent_config = ureq::config::Config::builder().http_status_as_error(false).timeout_connect(Some(Duration::from_secs(10))).timeout_global(Some(Duration::from_secs(2700))).build();
     let agent = ureq::Agent::new_with_config(agent_config);
-    let history: Vec<Message> = vec![Message {
-      role: "system".into(),
-      content: util::render(&config.persona.prompt,&HashMap::new()),
-    }];
-    Chat {
+    let mut chat: Chat = Chat {
       config:  config.clone(),
-      agent:   agent,
-      history: history,
+      agent:   agent.clone(),
+      history: Vec::new(),
       send:    send,
+    };
+    if config.persona.name == "Commoner".to_string() {
+      let (send, recv) = unbounded::<StreamEvent>();
+      let config_clone = config.clone();
+      let agent_clone  = agent.clone();
+      std::thread::spawn(move || {
+        if let Err(err) = Self::submit(&config_clone,&agent_clone,send,&Vec::new(),&COMMONER_INIT_PROMPT) {
+          log::error!("Submit execution failed in background thread: {}", err);
+        }
+      });
+      let mut response: String = String::new();
+      while let Ok(event) = recv.recv() {
+        match event {
+          StreamEvent::Token(token) => {
+            response.push_str(&token);
+          }
+          StreamEvent::Finished => break,
+        }
+      }
+      log::debug!("Results of commoner init: {}",response);
+      if let Some((name_part, bio_part)) = response.split_once('|') {
+        let name: String = name_part.replace("NAME:", "").trim().to_string();
+        let bio:  String = bio_part.replace("BACKSTORY:", "").trim().to_string();
+        log::info!("Commoner Name: {}",name);
+        log::info!("Commoner Backstory: {}",bio);
+        let fields: HashMap<&str,String> = HashMap::from([
+          ("NAME",name.clone()),
+          ("BACKSTORY",bio.clone()),
+        ]);
+        chat.config.persona.name = name.clone();
+        chat.history = vec![
+          Message {
+            role:    "system".to_string(),
+            content: util::render(&config.persona.prompt,&fields),
+          },
+          Message {
+            role:    "assistant".into(),
+            content: config.persona.greeting.clone(),
+          },
+        ];
+      } else {
+        log::warn!("Failed to initialize commoner, it will be easily confused: Output invalid: {}",response);
+        chat.history = vec![
+          Message {
+            role:    "system".to_string(),
+            content: "You are generic fantasy human commoner.".to_string(),
+          },
+          Message {
+            role:    "assistant".into(),
+            content: config.persona.greeting.clone(),
+          },
+        ];
+      }
+    } else {
+      chat.history = vec![
+        Message {
+          role:    "system".into(),
+          content: util::render(&config.persona.prompt,&HashMap::new()),
+        },
+        Message {
+          role:    "assistant".into(),
+          content: config.persona.greeting.clone(),
+        },
+      ];
     }
+    chat
   }
 
   pub(crate) fn chat(&mut self,input: &str) -> Result<(),String> {

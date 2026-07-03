@@ -48,7 +48,7 @@ impl Persona {
   pub(crate) fn commoner() -> Persona {
     Persona {
       name:       "Commoner".to_string(),
-      prompt:     COMMONER_PROMPT.to_string(),
+      prompt:     COMMONER_SYSTEM_PROMPT.to_string(),
       greeting:   COMMONER_GREETING.to_string(),
       dimensions: ChatDimensions {
         chat_left:    555.0,
