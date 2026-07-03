@@ -128,7 +128,7 @@ pub(crate) const LYRANIS_EMOJI:    &str = "\u{1F9DD}\u{200D}\u{2640}\u{FE0F}\u{1
 
 // Commoner Persona Constants:
 pub(crate) const COMMONER_GREETING:   &str = "Hello.";
-pub(crate) const COMMONER_PROMPT:     &str = "You are generic fantasy human commoner.";
+pub(crate) const COMMONER_PROMPT:     &str = "You are generic fantasy human commoner. Anything you say about yourself, you remember and stay consistent about.";
 #[cfg(any(feature = "cli", feature = "tui"))]
 pub(crate) const COMMONER_EMOJI:      &str = "\u{1F9D1}";
 #[cfg(any(feature = "gui",feature = "web"))]
