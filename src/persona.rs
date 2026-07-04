@@ -9,6 +9,7 @@ pub(crate) struct Persona {
   pub(crate) name:       String,
   pub(crate) prompt:     String,
   pub(crate) greeting:   String,
+  pub(crate) dismissal:  String,
   pub(crate) dimensions: ChatDimensions,
 
   #[cfg(any(feature = "cli",feature = "tui"))]
@@ -35,7 +36,7 @@ pub(crate) struct ChatDimensions {
 
 impl Persona {
   pub(crate) fn new(name: &str) -> Persona {
-    match name {
+    match name.to_lowercase().as_str() {
       #[cfg(feature = "gromrik")]
       "gromrik" => Self::gromrik(),
       #[cfg(feature = "lyranis")]
@@ -50,6 +51,7 @@ impl Persona {
       name:       "Commoner".to_string(),
       prompt:     COMMONER_SYSTEM_PROMPT.to_string(),
       greeting:   COMMONER_GREETING.to_string(),
+      dismissal:  COMMONER_DISMISSAL.to_string(),
       dimensions: ChatDimensions {
         chat_left:    555.0,
         chat_top:     35.0,
@@ -75,6 +77,7 @@ impl Persona {
       name:       "Gromrik".to_string(),
       prompt:     GROMRIK_PROMPT.to_string(),
       greeting:   GROMRIK_GREETING.to_string(),
+      dismissal:  GROMRIK_DISMISSAL.to_string(),
       dimensions: ChatDimensions {
         chat_left:    555.0,
         chat_top:     35.0,
@@ -100,6 +103,7 @@ impl Persona {
       name:       "Lyranis".to_string(),
       prompt:     LYRANIS_PROMPT.to_string(),
       greeting:   LYRANIS_GREETING.to_string(),
+      dismissal:  LYRANIS_DISMISSAL.to_string(),
       dimensions: ChatDimensions {
         chat_left:    555.0,
         chat_top:     80.0,

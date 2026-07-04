@@ -168,7 +168,19 @@ impl Chat {
     let send_clone   = self.send.clone(); 
     let input_clone  = input.to_string();
     std::thread::spawn(move || {
-      if let Err(err) = Self::submit(&config_clone,&agent_clone,send_clone,&messages,&input_clone) {
+      struct ThreadGuard {
+        sender: Sender<StreamEvent>,
+      }
+
+      impl Drop for ThreadGuard {
+        fn drop(&mut self) {
+          let _ = self.sender.send(StreamEvent::Finished);
+        }
+      }
+
+      let _guard = ThreadGuard { sender: send_clone.clone() };
+
+      if let Err(err) = Self::submit(&config_clone, &agent_clone, send_clone, &messages, &input_clone) {
         log::error!("Submit execution failed in background thread: {}", err);
       }
     });

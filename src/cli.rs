@@ -84,13 +84,22 @@ impl CLI {
           StreamEvent::Finished => break,
         }
       }
-      println!();
       if !complete_answer.is_empty() {
+        println!();
         self.chat.history.push(Message {
           role: "assistant".into(),
           content: complete_answer,
         });
+      } else {
+        log::error!("Failed to reach Ollama. Check your connection!");
+        self.chat.history.push(Message {
+          role: "assistant".into(),
+          content: self.config.persona.dismissal.clone(),
+        });
+        println!("{}{}",indent,self.config.persona.dismissal);
       }
     }
+    println!("\n{}  {}:\n\n  {}\n",self.config.persona.emoji,self.config.persona.name,self.config.persona.dismissal);
+
   }
 }

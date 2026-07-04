@@ -6,7 +6,7 @@ description = "A Displeased Dwarf Chat Bot"
 repository = "https://github.com/countessellis/gromrik"
 homepage = "https://github.com/countessellis/gromrik"
 readme = "README.md"
-version = "1.0.1"
+version = "1.1.0"
 edition = "2024"
 default-run = "gromrik"
 

@@ -73,7 +73,7 @@ impl Config {
     let config_file: String = util::build_path(&config_file,&"config".to_string());
     let mut config: Vec<String> = Vec::new();
     config.push(format!("mode: {}",self.mode));
-    config.push(format!("persona: {}",self.persona.name));
+    config.push(format!("persona: {}",self.persona.name.to_lowercase()));
     config.push(format!("llm_server_url: {}",self.llm_server_url));
     config.push(format!("model: {}",self.model));
     #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]

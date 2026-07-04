@@ -9,10 +9,12 @@ use ratatui::{
   widgets::*,
 };
 use std::time::Duration;
+use std::io;
 
 use crate::chat::*;
 use crate::config::*;
 use crate::defaults::*;
+use crate::persona::*;
 
 ///////////// TUI
 
@@ -55,7 +57,12 @@ impl TUI {
             match event {
               StreamEvent::Token(token) => self.current_reply.push_str(&token),
               StreamEvent::Finished => {
-                self.history_lines.push((format!("{}",self.config.persona.name), self.current_reply.clone()));
+                if !self.current_reply.trim().is_empty() {
+                  self.history_lines.push((self.config.persona.name.clone(), self.current_reply.clone()));
+                } else {
+                  log::error!("Failed to reach Ollama. Check your connection!");
+                  self.history_lines.push((self.config.persona.name.clone(),self.config.persona.dismissal.clone()));
+                }
                 self.current_reply.clear();
                 self.is_answering = false;
               },
@@ -65,9 +72,9 @@ impl TUI {
           if let Err(err) = terminal.draw(|frame| {
             let full_area = frame.area();
             let text_image = self.config.persona.text_image.clone();
-            let (mut persona_image_width, mut persona_image_height) = Self::get_text_dimensions(&text_image);
-            if persona_image_width < 60 { persona_image_width = 60 }
-            if persona_image_height < 30 { persona_image_height = 30 }
+            let (raw_persona_image_width,raw_persona_image_height) = Self::get_text_dimensions(&text_image);
+            let persona_image_width  = if raw_persona_image_width < 60  { 60 } else { raw_persona_image_width };
+            let persona_image_height = if raw_persona_image_height < 25 { 25 } else { raw_persona_image_height };
             let horizontal_chunks = Layout::default()
               .direction(Direction::Horizontal)
               .constraints([
@@ -111,15 +118,33 @@ impl TUI {
               .split(left_column);
             let left_persona_image_pane = vertical_chunks[0];
             let persona_image: Text = Text::from(text_image).fg(Color::Rgb(91,55,36));
-            let persona_image_paragraph = Paragraph::new(persona_image)
-              .alignment(Alignment::Center)
-              .block(Block::default()
-              .title(ratatui::text::Line::from(format!(" {} ",self.config.persona.name)).fg(Color::Rgb(245,235,215)).bold())
+            let persona_block = Block::default()
+              .title(ratatui::text::Line::from(format!(" {} ", self.config.persona.name)).fg(Color::Rgb(245,235,215)).bold())
               .title_alignment(Alignment::Center)
               .borders(Borders::ALL)
               .border_type(BorderType::Rounded)
-              .border_style(Style::default().fg(Color::Rgb(194,162,105))));
-            frame.render_widget(persona_image_paragraph,left_persona_image_pane);
+              .border_style(Style::default().fg(Color::Rgb(194,162,105)));
+            let inner_height = left_persona_image_pane.height.saturating_sub(2);
+            if (raw_persona_image_height as u16) < inner_height {
+              frame.render_widget(persona_block, left_persona_image_pane);
+              let inner_area = left_persona_image_pane.inner(ratatui::layout::Margin { horizontal: 1, vertical: 1 });
+              let top_padding = (inner_height - raw_persona_image_height as u16) / 2;
+              let inner_chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([
+                  Constraint::Length(top_padding),              // Exact blank spacer rows
+                  Constraint::Length(raw_persona_image_height as u16),    // Lock art lines perfectly
+                  Constraint::Min(0),
+                ])
+                .split(inner_area);
+              let persona_image_paragraph = Paragraph::new(persona_image).alignment(Alignment::Center);
+              frame.render_widget(persona_image_paragraph, inner_chunks[1]);
+            } else {
+              let persona_image_paragraph = Paragraph::new(persona_image)
+                .alignment(Alignment::Center)
+                .block(persona_block);
+              frame.render_widget(persona_image_paragraph, left_persona_image_pane);
+            }
             let history_block = Block::default()
               .title(ratatui::text::Line::from(" Conversation ").fg(Color::Rgb(165,235,200)).bold())
               .title_alignment(Alignment::Center)
@@ -240,6 +265,29 @@ impl TUI {
                             self.user_scrolled = false;
                             self.input.clear();
                           },
+                          "/reset" => {
+                            let _ = terminal.clear();
+                            print!("\x1B[2J\x1B[1;1H"); 
+                            let _ = io::stdout().flush();
+                            *self = Self::new(&self.config.clone());
+                          }
+                          "/persona" => {
+                            if parts.len() > 1 {
+                              let persona = parts[1..].join(" ");
+                              if PERSONA_LIST.contains(&persona.as_str()) {
+                                let mut config = self.config.clone();
+                                config.persona = Persona::new(persona.as_str());
+                                let _ = terminal.clear();
+                                print!("\x1B[2J\x1B[1;1H"); 
+                                let _ = io::stdout().flush();
+                                *self = Self::new(&config);
+                              } else {
+                                self.history_lines.push(("System".to_string(),format!("Please provide a valid persona: {}", PERSONA_LIST)));
+                              }
+                            } else {
+                              self.history_lines.push(("System".to_string(),format!("Please provide a valid persona: {}", PERSONA_LIST)));
+                            }
+                          },
                           "/save" => {
                             let filename: String = if parts.len() > 1 { parts[1..].join(" ") } else { self.config.history_file.clone() };
                             let msg = match self.chat.save_history(&filename.to_string(), &self.history_lines) {
@@ -270,11 +318,13 @@ impl TUI {
                             let help_text = vec![
                               "Available Commands:",
                               "",
-                              "/help             - Display this utility command list.",
-                              "/clear            - Clear the chat logs completely.",
+                              "/help  - Display this utility command list.",
+                              "/clear  - Clear the dispayed chat logs completely.",
+                              "/reset  - Resets the current persona.",
+                              format!("/persona [persona]  - Switches the active persona, 'persona' must be one of {}.",PERSONA_LIST).as_str(),
+                              "/exit  - Safely close and exit the application.",
                               "/save [filename]  - Save session to a file (or configuration default).",
                               "/load [filename]  - Restore session and model context from a file.",
-                              "/exit             - Safely close and exit the application.",
                               "",
                             ].join("\n");
                             self.history_lines.push(("System".to_string(), help_text));
@@ -283,7 +333,7 @@ impl TUI {
                             self.input.clear();
                           },
                           _ => {
-                            self.history_lines.push(("System".to_string(),format!("Unknown command: '{}'. Type /clear to wipe the log.", command)));
+                            self.history_lines.push(("System".to_string(),format!("Unknown command: '{}'. Type /help for available commands.", command)));
                             self.user_scrolled = false;
                             self.input.clear();
                           },
@@ -309,10 +359,11 @@ impl TUI {
             }
           }
           if user_wants_to_exit {
-              break;
+            break;
           }
         }
         ratatui::restore();
+        println!("{}  {}:\n\n  {}\n",self.config.persona.emoji,self.config.persona.name,self.config.persona.dismissal);
       },
       Err(_) => {},
     }

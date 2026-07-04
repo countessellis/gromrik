@@ -6,6 +6,7 @@ use eframe::egui;
 use crate::chat::*;
 use crate::config::*;
 use crate::defaults::*;
+use crate::persona::*;
 
 ///////////// GUI
 
@@ -81,19 +82,26 @@ impl eframe::App for GUI {
           self.scroll_to_bottom = true;
         }
         StreamEvent::Finished => {
-          self.history_lines.push((self.config.persona.name.to_string(), self.current_reply.clone()));
+          if !self.current_reply.trim().is_empty() {
+            self.history_lines.push((self.config.persona.name.to_string(), self.current_reply.clone()));
+          } else {
+            log::error!("Failed to reach Ollama. Check your connection!");
+            let fallback = self.config.persona.dismissal.clone();
+            self.history_lines.push((self.config.persona.name.to_string(), fallback));
+          }
           self.current_reply.clear();
           self.is_answering = false;
           self.scroll_to_bottom = true;
         }
       }
     }
+    let image_uri = format!("bytes://persona_bg_{}.png", self.config.persona.name.clone());
     let image_source = egui::ImageSource::Bytes {
-      uri: std::borrow::Cow::Borrowed("bytes://persona_bg.png"),
+      uri: std::borrow::Cow::Owned(image_uri.clone()),
       bytes: egui::load::Bytes::from(self.config.persona.full_image.clone()),
     };
     ui.add(
-      egui::Image::new(image_source).max_size(egui::vec2(ui.available_width(), ui.available_height()))
+      egui::Image::new(image_source).max_size(egui::vec2(ui.available_width(),ui.available_height()))
     );
     let target_rect = egui::Rect::from_min_size(
       egui::pos2(self.config.persona.dimensions.chat_left,self.config.persona.dimensions.chat_top),
@@ -175,6 +183,25 @@ impl eframe::App for GUI {
                 self.scroll_to_bottom = false;
                 self.input.clear();
               },
+              "/reset" => {
+                *self = Self::new(&self.config.clone());
+                ui.ctx().forget_all_images();
+              },
+              "/persona" => {
+                if parts.len() > 1 {
+                  let persona: String = parts[1..].join(" ");
+                  if PERSONA_LIST.contains(persona.as_str()) {
+                    let mut config: Config = self.config.clone();
+                    config.persona = Persona::new(persona.as_str());
+                    *self = Self::new(&config);
+                    ui.ctx().forget_all_images();
+                  } else {
+                    self.history_lines.push(("System".to_string(),format!("Please provide a valid persona: {}",PERSONA_LIST)));
+                  }
+                } else {
+                  self.history_lines.push(("System".to_string(),format!("Please provide a valid persona: {}",PERSONA_LIST)));
+                }
+              },
               "/save" => {
                 let filename: String = if parts.len() > 1 { parts[1..].join(" ") } else { self.config.history_file.clone() };
                 let msg = match self.chat.save_history(&filename.to_string(), &self.history_lines) {
@@ -203,11 +230,13 @@ impl eframe::App for GUI {
                  let help_text = vec![
                    "Available Commands:",
                    "",
-                   "/help             - Display this utility command list.",
-                   "/clear            - Clear the chat logs completely.",
+                   "/help  - Display this utility command list.",
+                   "/clear  - Clear the dispayed chat logs completely.",
+                   "/reset  - Resets the current persona.",
+                   format!("/persona [persona]  - Switches the active persona, 'persona' must be one of {}.",PERSONA_LIST).as_str(),
+                   "/exit  - Safely close and exit the application.",
                    "/save [filename]  - Save session to a file (or configuration default).",
                    "/load [filename]  - Restore session and model context from a file.",
-                   "/exit             - Safely close and exit the application.",
                    "",
                  ].join("\n");
                  self.history_lines.push(("System".to_string(), help_text));
@@ -215,7 +244,7 @@ impl eframe::App for GUI {
                  self.input.clear();
               },
               _ => {
-                self.history_lines.push(("System".to_string(),format!("Unknown command: '{}'. Type /clear to wipe the log.", command)));
+                self.history_lines.push(("System".to_string(),format!("Unknown command: '{}'. Type /help for available commands.", command)));
                 self.scroll_to_bottom = true;
                 self.input.clear();
               },
@@ -236,5 +265,8 @@ impl eframe::App for GUI {
         response.request_focus(); 
       }
     });
+  }
+  fn on_exit(&mut self) {
+    println!("{}  {}:\n\n  {}\n",self.config.persona.emoji,self.config.persona.name,self.config.persona.dismissal);
   }
 }
