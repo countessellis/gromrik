@@ -1,4 +1,4 @@
-# gromrik
+# Gromrik
 
 Gromrik is a displeased Dwarf who will grumpily tell you why you're wrong and not worth his time. He might give helpful ideas, if you don't mind him insulting you.
 
