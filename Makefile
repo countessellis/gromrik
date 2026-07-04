@@ -1,9 +1,10 @@
 # Define the binary name base
 CARGO = cargo
 RELEASE_FLAG = --release
+VERSION := $(shell grep '^version =' Cargo.toml | head -n1 | cut -d '"' -f 2)
 
 # Phony targets prevent conflicts with files named 'all', 'clean', etc.
-.PHONY: all full clean help
+.PHONY: all full clean help release github-release update-toolchain
 .DEFAULT_GOAL := help
 
 help:
@@ -11,11 +12,39 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
 # Default task: Builds everything with all features
-all: full gromrik lyranis commoner ## Build all targets
+all: update-toolchain full gromrik lyranis commoner ## Build all targets
 
 gromrik: gromrik-full gromrik-cli gromrik-tui gromrik-gui gromrik-web ## Build just Gromrik targets
 
 lyranis: lyranis-full lyranis-cli lyranis-tui lyranis-gui lyranis-web ## Build just Lyranis targets
+
+release: clean all github-release ## Release the current version to Github (doing a clean and build all first)
+
+github-release: ## Release the current version to Github
+	@echo "Checking if git tag v$(VERSION) exists..."
+	@git rev-parse "v$(VERSION)" >/dev/null 2>&1 || ( \
+		echo "Error: Git tag v$(VERSION) does not exist."; \
+		echo "Please create the tag first: git tag -a v$(VERSION) -m 'Your release notes'"; \
+		exit 1 \
+	)
+	@echo "Found tag v$(VERSION). Extracting release notes..."
+	$(eval TAG_NOTES := $(shell git tag -l -n99 "v$(VERSION)" | sed 's/^v[0-9.]*[[:space:]]*//'))
+	@echo "Checking for pre-existing GitHub Release..."
+	@gh release view v$(VERSION) >/dev/null 2>&1 && ( \
+		echo "Pre-existing release v$(VERSION) found. Deleting old release to overwrite..." && \
+		gh release delete v$(VERSION) -y \
+	) || true
+	@echo "Creating GitHub Release v$(VERSION) with all executable binaries..."
+	gh release create v$(VERSION) \
+		$$(find ./target/release -maxdepth 1 -type f -executable) \
+		--title "Release v$(VERSION)" \
+		--notes "$(TAG_NOTES)"
+
+update-toolchain: ## Set and update the current Rust toolchain
+	@echo "Setting default toolchain to nightly..."
+	rustup default nightly
+	@echo "Checking for Rust toolchain updates..."
+	rustup update
 
 clean: ## Clean cargo target directory
 	$(CARGO) clean

@@ -118,7 +118,7 @@ pub(crate) const PERSONA_LIST: &str = "commoner";
 pub(crate) const GROMRIK_GREETING:  &str = "Bah! Why are you bothering me?";
 #[cfg(feature = "gromrik")]
 pub(crate) const GROMRIK_DISMISSAL: &str = "Go away!";
-#[cfg(all(feature = "gromrik",any(feature = "cli", feature = "tui")))]
+#[cfg(feature = "gromrik")]
 pub(crate) const GROMRIK_EMOJI:     &str = "\u{1F624}\u{26Cf}\u{FE0F}";
 
 // Lyranis Persona Constants:
@@ -127,14 +127,13 @@ pub(crate) const GROMRIK_EMOJI:     &str = "\u{1F624}\u{26Cf}\u{FE0F}";
 pub(crate) const LYRANIS_GREETING:  &str = "I wonder... Oh! Fine greetings, stranger. Do you want something?";
 #[cfg(feature = "lyranis")]
 pub(crate) const LYRANIS_DISMISSAL: &str = "Now what was I contemplating again...?";
-#[cfg(all(feature = "lyranis",any(feature = "cli", feature = "tui")))]
+#[cfg(feature = "lyranis")]
 pub(crate) const LYRANIS_EMOJI:     &str = "\u{1F9DD}\u{200D}\u{2640}\u{FE0F}\u{1F52E}";
 
 // Commoner Persona Constants:
 pub(crate) const COMMONER_TRAITS:        &[&str] = &["rustic", "weathered", "cheerful", "anxious", "rebellious", "humble", "curious", "shrewd"];
 pub(crate) const COMMONER_GREETING:      &str    = "Hello.";
 pub(crate) const COMMONER_DISMISSAL:      &str    = "What did you say, I missed that.";
-#[cfg(any(feature = "cli", feature = "tui"))]
 pub(crate) const COMMONER_EMOJI:         &str    = "\u{1F9D1}";
 #[cfg(any(feature = "gui",feature = "web"))]
 pub(crate) const COMMONER_FULL_IMAGE:    &[u8]   = &[ 137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 10, 73, 68, 65, 84, 8, 29, 99, 0, 1, 0, 0, 5, 0, 1, 138, 109, 188, 32, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130 ];
