@@ -3,15 +3,15 @@ use std::fs;
 use std::io::{Cursor, Read};
 use tar::Archive;
 use zstd::stream::read::Decoder;
+use std::collections::HashMap;
 
 use crate::defaults::*;
 
 ///////////// Persona
 
-
-
 #[derive(Debug,Clone)]
 pub(crate) struct Persona {
+  pub(crate) label:      String,
   pub(crate) name:       String,
   pub(crate) prompt:     String,
   pub(crate) greeting:   String,
@@ -40,6 +40,7 @@ pub(crate) struct ChatDimensions {
 
 #[derive(Deserialize)]
 struct PersonaMetadata {
+  label:      String,
   name:      String,
   greeting:  String,
   dismissal: String,
@@ -47,8 +48,8 @@ struct PersonaMetadata {
 }
 
 impl Persona {
-  pub(crate) fn new(name: &str) -> Persona {
-    match name.to_lowercase().as_str() {
+  pub(crate) fn new(label: &str) -> Persona {
+    match label.to_lowercase().as_str() {
       #[cfg(feature = "gromrik")]
       "gromrik" => Self::gromrik(),
       #[cfg(feature = "lyranis")]
@@ -58,8 +59,23 @@ impl Persona {
     }
   }
 
+  pub(crate) fn gather() -> HashMap<String,Persona> {
+    let mut personas: HashMap<String,Persona> = HashMap::new();
+    for label in PERSONA_LIST.split(",").map(|persona| persona.trim()).collect::<Vec<&str>>() {
+      personas.insert(label.to_string(),Self::new(label));
+    }
+    #[cfg(all(feature = "gromrik", feature = "lyranis"))]
+    for (index,label) in BUNDLE_LIST.iter().enumerate() {
+      if let Some(persona) = Self::load(BUNDLED_PERSONAS[index]) {
+        personas.insert(label.to_string(),persona);
+      }
+    }
+    personas
+  }
+
   pub(crate) fn commoner() -> Persona {
     Persona {
+      label:      "commoner".to_string(),
       name:       "Commoner".to_string(),
       prompt:     COMMONER_SYSTEM_PROMPT.to_string(),
       greeting:   COMMONER_GREETING.to_string(),
@@ -86,6 +102,7 @@ impl Persona {
   #[cfg(feature = "gromrik")]
   pub(crate) fn gromrik() -> Persona {
     Persona {
+      label:      "gromrik".to_string(),
       name:       "Gromrik".to_string(),
       prompt:     GROMRIK_PROMPT.to_string(),
       greeting:   GROMRIK_GREETING.to_string(),
@@ -112,6 +129,7 @@ impl Persona {
   #[cfg(feature = "lyranis")]
   pub(crate) fn lyranis() -> Persona {
     Persona {
+      label:      "lyranis".to_string(),
       name:       "Lyranis".to_string(),
       prompt:     LYRANIS_PROMPT.to_string(),
       greeting:   LYRANIS_GREETING.to_string(),
@@ -135,34 +153,38 @@ impl Persona {
     }
   }
 
-  pub(crate) fn load(persona_file: &String) -> Option<Self> {
-    if persona_file.is_empty() { return None }
-    let raw_bundle = match fs::read(persona_file.as_str()) {
+  pub(crate) fn from_file(bundle_file: &String) -> Option<Self> {
+    if bundle_file.is_empty() { return None }
+    let bundle = match fs::read(bundle_file.as_str()) {
       Ok(bundle) => bundle,
       Err(err) => {
-        log::error!("Failed to read persona bundle from {}: {}",persona_file,err);
+        log::error!("Failed to read persona bundle from {}: {}",bundle_file,err);
         return None;
       }
     };
-    let cursor = Cursor::new(raw_bundle);
+    Self::load(&bundle)
+  }
+
+  pub(crate) fn load(bundle: &[u8]) -> Option<Self> {
+    let cursor = Cursor::new(bundle);
     let decompressor = match Decoder::new(cursor) {
       Ok(decompressor) => decompressor,
       Err(err) => {
-        log::error!("ZSTD decompression failed for bundle {}: {}",persona_file,err);
+        log::error!("ZSTD decompression failed for bundle: {}",err);
         return None;
       }
     };
     let mut archive = Archive::new(decompressor);
     let mut metadata_json = Vec::new();
-    let mut prompt = String::new();
-    let mut text_image = String::new();
-    let mut full_image = Vec::new();
+    let mut prompt: String = String::new();
+    let mut text_image: String = String::new();
+    let mut full_image: Vec<u8> = Vec::new();
     #[cfg(feature = "gui")]
     let mut layout_json = Vec::new();
     let entries = match archive.entries() {
       Ok(entries) => entries,
       Err(err) => {
-        log::error!("Failed to read TAR entries from bundle {}: {}",persona_file,err);
+        log::error!("Failed to read TAR entries from bundle: {}",err);
         return None;
       }
     };
@@ -185,13 +207,14 @@ impl Persona {
         _ => {}
       }
     }
-    if metadata_json.is_empty() { log::warn!("The metadata.json in bundle {} was empty or not found!",persona_file); }
+    if metadata_json.is_empty() { log::warn!("The metadata.json in bundle was empty or not found!"); }
     #[cfg(feature = "gui")]
-    if layout_json.is_empty() { log::warn!("The dimensions.json in bundle {} was empty or not found!",persona_file); }
+    if layout_json.is_empty() { log::warn!("The dimensions.json in bundle was empty or not found!"); }
     let meta: PersonaMetadata = serde_json::from_slice(&metadata_json).ok()?;
     #[cfg(feature = "gui")]
     let dimensions: ChatDimensions = serde_json::from_slice(&layout_json).ok()?;
     Some(Self {
+      label: meta.label,
       name: meta.name,
       greeting: meta.greeting,
       dismissal: meta.dismissal,

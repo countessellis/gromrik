@@ -149,6 +149,9 @@ pub(crate) const PERSONA_FONT:  &[u8] = include_bytes!("../resources/MedievalSha
 #[cfg(any(feature = "gui",feature = "web"))]
 pub(crate) const DIALOGUE_FONT: &[u8] = include_bytes!("../resources/EBGaramond-VariableFont_wght.ttf");
 
+// Include the build time generated include for bundles:
+include!("persona_bundles.rs");
+
 // Gromrik Persona Includes:
 
 #[cfg(feature = "gromrik")]

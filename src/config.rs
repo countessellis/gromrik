@@ -3,6 +3,7 @@ use std::fs;
 use std::fs::{read_to_string,write};
 use std::env::{args,Args};
 use std::str::FromStr;
+use std::collections::HashMap;
 
 use crate::defaults::*;
 use crate::mode::*;
@@ -14,6 +15,7 @@ pub(crate) struct Config {
   pub(crate) ranas:          String,
   pub(crate) mode:           Mode,
   pub(crate) persona:        Persona,
+  pub(crate) personas:       HashMap<String,Persona>,
   pub(crate) llm_server_url: String,
   pub(crate) model:          String,
   pub(crate) persona_file:   String,
@@ -64,6 +66,7 @@ impl Config {
       ranas:          util::bin_name(),
       mode:           Mode::mode(),
       persona:        Persona::new(DEFAULT_PERSONA),
+      personas:       Persona::gather(),
       llm_server_url: DEFAULT_LLM_SERVER_URL.to_string(),
       model:          DEFAULT_MODEL.to_string(),
       persona_file:   String::new(),
@@ -94,7 +97,7 @@ impl Config {
       Ok(mode) => mode,
       Err(_)   => Default::default(),
     };
-    config.persona        = Persona::new(util::prompt(format!("Persona: ({}, default: {})",PERSONA_LIST,config.persona.name),config.persona.name).as_str());
+    config.persona        = Persona::new(util::prompt(format!("Persona: ({}, default: {})",config.personas.keys().cloned().collect::<Vec<String>>().join(","),config.persona.name),config.persona.name).as_str());
     config.llm_server_url = util::prompt(format!("LLM Server URL: (default: {})",config.llm_server_url),config.llm_server_url.clone());
     config.model          = util::prompt(format!("Model: (default: {})",config.model),config.model.clone());
     config.persona_file   = util::prompt(format!("Persona Bundle Path: (default: none)"),config.persona_file.clone());
@@ -159,8 +162,11 @@ impl Config {
     let mut config: Config = Config::from_args(&config);
     if !config.persona_file.is_empty() {
       log::info!("Loading persona from bundle {}",config.persona_file);
-      match Persona::load(&config.persona_file) {
-        Some(persona) => config.persona = persona,
+      match Persona::from_file(&config.persona_file) {
+        Some(persona) => {
+          config.personas.insert(persona.label.clone(),persona.clone());
+          config.persona = persona;
+        },
         None          => {
           log::warn!("Failed to load persona from {}, using {}.",config.persona_file,config.persona.name);
           config.persona_file = String::new();

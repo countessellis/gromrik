@@ -6,7 +6,6 @@ use eframe::egui;
 use crate::chat::*;
 use crate::config::*;
 use crate::defaults::*;
-use crate::persona::*;
 
 ///////////// GUI
 
@@ -193,17 +192,17 @@ impl eframe::App for GUI {
               },
               "/persona" => {
                 if parts.len() > 1 {
-                  let persona: String = parts[1..].join(" ");
-                  if PERSONA_LIST.contains(persona.as_str()) {
+                  let label: String = parts[1..].join(" ");
+                  if let Some (persona) = self.config.personas.get(&label) {
                     let mut config: Config = self.config.clone();
-                    config.persona = Persona::new(persona.as_str());
+                    config.persona = persona.clone();
                     *self = Self::new(&config);
                     ui.ctx().forget_all_images();
                   } else {
-                    self.history_lines.push(("System".to_string(),format!("Please provide a valid persona: {}",PERSONA_LIST)));
+                    self.history_lines.push(("System".to_string(),format!("Please provide a valid persona: {}",self.config.personas.keys().cloned().collect::<Vec<String>>().join(","))));
                   }
                 } else {
-                  self.history_lines.push(("System".to_string(),format!("Please provide a valid persona: {}",PERSONA_LIST)));
+                  self.history_lines.push(("System".to_string(),format!("Please provide a valid persona: {}",self.config.personas.keys().cloned().collect::<Vec<String>>().join(","))));
                 }
               },
               "/save" => {
@@ -229,7 +228,7 @@ impl eframe::App for GUI {
                 self.scroll_to_bottom = true;
                 self.input.clear();
               },
-              "/exit" => ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close),
+              "/exit"|"/quit" => ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close),
               "/help" => {
                  let help_text = vec![
                    "Available Commands:",
@@ -237,8 +236,9 @@ impl eframe::App for GUI {
                    "/help  - Display this utility command list.",
                    "/clear  - Clear the dispayed chat logs completely.",
                    "/reset  - Resets the current persona.",
-                   format!("/persona [persona]  - Switches the active persona, 'persona' must be one of {}.",PERSONA_LIST).as_str(),
+                   format!("/persona [persona]  - Switches the active persona, 'persona' must be one of {}.",self.config.personas.keys().cloned().collect::<Vec<String>>().join(",")).as_str(),
                    "/exit  - Safely close and exit the application.",
+                   "/quit  - Also safely closes and exits the application.",
                    "/save [filename]  - Save session to a file (or configuration default).",
                    "/load [filename]  - Restore session and model context from a file.",
                    "",
@@ -253,7 +253,7 @@ impl eframe::App for GUI {
                 self.input.clear();
               },
             }
-          } else if prompt.eq_ignore_ascii_case("exit") {
+          } else if prompt.eq_ignore_ascii_case("exit") || prompt.eq_ignore_ascii_case("quit") {
             ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close); 
           } else {
             self.history_lines.push(("You".to_string(), prompt.clone()));

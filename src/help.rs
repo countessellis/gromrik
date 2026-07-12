@@ -17,7 +17,7 @@ impl fmt::Display for Help {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     let details: Vec<String> = vec![
       format!("  --config <CONFIG FILE PATH>          Path to the config file (default: {})",DEFAULT_CONFIG_FILE),
-      format!("  --persona <PERSONA>                  Persona to interact with (default: {}, choices: {}",DEFAULT_PERSONA,PERSONA_LIST),
+      format!("  --persona <PERSONA>                  Persona to interact with (default: {}, choices: {}",DEFAULT_PERSONA,self.config.personas.keys().cloned().collect::<Vec<String>>().join(",")),
       format!("  --llm-server-url <LLM SERVER URL>    URL for LLM chat endpoint, must be compatible with Ollama's /api/chat (default: {})",DEFAULT_LLM_SERVER_URL),
       format!("  --model <LLM MODEL NAME>             LLM model to use for interacting with the persona, must be already loaded into the server (default: {})",DEFAULT_MODEL),
       format!("  --persona-file <PERSONA BUNDLE PATH> Path to a persona bundle (.grom file) to use instead of the preloaded personas. (default: none)"),
