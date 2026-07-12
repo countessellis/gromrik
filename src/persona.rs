@@ -1,3 +1,9 @@
+use serde::Deserialize;
+use std::fs;
+use std::io::{Cursor, Read};
+use tar::Archive;
+use zstd::stream::read::Decoder;
+
 use crate::defaults::*;
 
 ///////////// Persona
@@ -20,7 +26,7 @@ pub(crate) struct Persona {
 }
 
 #[cfg(feature = "gui")]
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,Deserialize)]
 pub(crate) struct ChatDimensions {
   pub(crate) chat_left:    f32, 
   pub(crate) chat_top:     f32, 
@@ -32,7 +38,13 @@ pub(crate) struct ChatDimensions {
   pub(crate) input_height: f32, 
 }
 
-
+#[derive(Deserialize)]
+struct PersonaMetadata {
+  name:      String,
+  greeting:  String,
+  dismissal: String,
+  emoji:     String,
+}
 
 impl Persona {
   pub(crate) fn new(name: &str) -> Persona {
@@ -121,5 +133,76 @@ impl Persona {
       #[cfg(any(feature = "gui",feature = "web"))]
       full_image: LYRANIS_FULL_IMAGE.to_vec(),
     }
+  }
+
+  pub(crate) fn load(persona_file: &String) -> Option<Self> {
+    if persona_file.is_empty() { return None }
+    let raw_bundle = match fs::read(persona_file.as_str()) {
+      Ok(bundle) => bundle,
+      Err(err) => {
+        log::error!("Failed to read persona bundle from {}: {}",persona_file,err);
+        return None;
+      }
+    };
+    let cursor = Cursor::new(raw_bundle);
+    let decompressor = match Decoder::new(cursor) {
+      Ok(decompressor) => decompressor,
+      Err(err) => {
+        log::error!("ZSTD decompression failed for bundle {}: {}",persona_file,err);
+        return None;
+      }
+    };
+    let mut archive = Archive::new(decompressor);
+    let mut metadata_json = Vec::new();
+    let mut prompt = String::new();
+    let mut text_image = String::new();
+    let mut full_image = Vec::new();
+    #[cfg(feature = "gui")]
+    let mut layout_json = Vec::new();
+    let entries = match archive.entries() {
+      Ok(entries) => entries,
+      Err(err) => {
+        log::error!("Failed to read TAR entries from bundle {}: {}",persona_file,err);
+        return None;
+      }
+    };
+    for entry in entries {
+      let mut entry = entry.ok()?;
+      let path = entry.path().ok()?;
+      let filename = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+      match filename {
+        "metadata.json"   => { entry.read_to_end(&mut metadata_json).unwrap(); }
+        "prompt.tpl"      => { entry.read_to_string(&mut prompt).unwrap(); }
+        "text_image.txt"  => { entry.read_to_string(&mut text_image).unwrap(); }
+        "full_image.png"  => { 
+          #[cfg(any(feature = "gui", feature = "web"))]
+          entry.read_to_end(&mut full_image).unwrap(); 
+        }
+        "dimensions.json" => {
+          #[cfg(feature = "gui")]
+          entry.read_to_end(&mut layout_json).unwrap();
+        }
+        _ => {}
+      }
+    }
+    if metadata_json.is_empty() { log::warn!("The metadata.json in bundle {} was empty or not found!",persona_file); }
+    #[cfg(feature = "gui")]
+    if layout_json.is_empty() { log::warn!("The dimensions.json in bundle {} was empty or not found!",persona_file); }
+    let meta: PersonaMetadata = serde_json::from_slice(&metadata_json).ok()?;
+    #[cfg(feature = "gui")]
+    let dimensions: ChatDimensions = serde_json::from_slice(&layout_json).ok()?;
+    Some(Self {
+      name: meta.name,
+      greeting: meta.greeting,
+      dismissal: meta.dismissal,
+      emoji: meta.emoji,
+      prompt,
+      #[cfg(feature = "gui")]
+      dimensions,
+      #[cfg(feature = "tui")]
+      text_image,
+      #[cfg(any(feature = "gui", feature = "web"))]
+      full_image,
+    })
   }
 }

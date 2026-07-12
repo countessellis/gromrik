@@ -128,7 +128,7 @@ pub(crate) const LYRANIS_GREETING:  &str = "I wonder... Oh! Fine greetings, stra
 #[cfg(feature = "lyranis")]
 pub(crate) const LYRANIS_DISMISSAL: &str = "Now what was I contemplating again...?";
 #[cfg(feature = "lyranis")]
-pub(crate) const LYRANIS_EMOJI:     &str = "\u{1F9DD}\u{200D}\u{2640}\u{FE0F}\u{1F52E}";
+pub(crate) const LYRANIS_EMOJI:     &str = "\u{1F9DD}\u{1F52E}";
 
 // Commoner Persona Constants:
 pub(crate) const COMMONER_TRAITS:        &[&str] = &["rustic", "weathered", "cheerful", "anxious", "rebellious", "humble", "curious", "shrewd"];
@@ -156,7 +156,7 @@ pub(crate) const GROMRIK_PROMPT:     &str  = include_str!("../resources/gromrik/
 #[cfg(all(feature = "gromrik",any(feature = "gui", feature = "web")))]
 pub(crate) const GROMRIK_FULL_IMAGE: &[u8] = include_bytes!("../resources/gromrik/gromrik-full.png");
 #[cfg(all(feature = "gromrik",feature = "tui"))]
-pub(crate) const GROMRIK_TEXT_IMAGE: &str  = include_str!("../resources/gromrik/gromrik.txt");
+pub(crate) const GROMRIK_TEXT_IMAGE: &str  = include_str!("../resources/gromrik/gromrik2.txt");
 
 // Lyranis Persona Includes:
 
@@ -165,7 +165,7 @@ pub(crate) const LYRANIS_PROMPT:     &str  = include_str!("../resources/lyranis/
 #[cfg(all(feature = "lyranis",any(feature = "gui", feature = "web")))]
 pub(crate) const LYRANIS_FULL_IMAGE: &[u8] = include_bytes!("../resources/lyranis/lyranis-chat2.png");
 #[cfg(all(feature = "lyranis",feature = "tui"))]
-pub(crate) const LYRANIS_TEXT_IMAGE: &str  = include_str!("../resources/lyranis/lyranis.txt");
+pub(crate) const LYRANIS_TEXT_IMAGE: &str  = include_str!("../resources/lyranis/lyranis2.txt");
 
 // Commoner Includes:
 

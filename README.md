@@ -29,6 +29,7 @@ Options:
   --persona <PERSONA>                  Persona to interact with (default: gromrik, choices: gromrik, lyranis, commoner
   --llm-server-url <LLM SERVER URL>    URL for LLM chat endpoint, must be compatible with Ollama's /api/chat (default: http://localhost:11434/api/chat)
   --model <LLM MODEL NAME>             LLM model to use for interacting with the persona, must be already loaded into the server (default: qwen2.5:7b-instruct-q4_K_M)
+  --persona-file <PERSONA BUNDLE PATH> Path to a persona bundle (.grom file) to use instead of the preloaded personas. (default: none)
   --history-file <HISTORY FILE PATH>   Path to the default file to use for saving and loading history (default: history/history.json)
   --mode <MODE>                        Mode to run in, (default: gui, choices: cli, tui, gui, web, help
   --cli                                Run in command line mode
@@ -120,13 +121,23 @@ The compiled in persona to interact with.
 
 Options:
 
-    gromrik  | Interact with Gromriki, the default.
+    gromrik  | Interact with Gromrik, the default.
     lyranis  | Interact with Lyranis.
     commoner | Interact with a random commoner.
 
-Thsi can be set in the config file with persona, or from the command line:
+This can be set in the config file with persona, or from the command line:
 
     --persona <persona>
+
+In addition, you can load a persona bundle, aka a .grom file. You can set the bundle with persona_file in the config file or from the command line:
+
+    --persona-file <file path>
+
+Bundles present in the repo:
+
+    resources/gromrik/gromrik.grom   | Gromrik, the grumpy dwarf the applicaiton is named for.
+    resources/lyranis/lyranis.grom   | Lyranis, an elven illusionist, spending her life in a dream.
+    resources/velissa/velissa.grom   | Velissa, a faeries assassion, plotting her next job.
 
 
 ## Building Gromrik

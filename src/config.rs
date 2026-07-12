@@ -16,7 +16,7 @@ pub(crate) struct Config {
   pub(crate) persona:        Persona,
   pub(crate) llm_server_url: String,
   pub(crate) model:          String,
-
+  pub(crate) persona_file:   String,
   #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
   pub(crate) history_file:   String,
 }
@@ -43,6 +43,7 @@ impl fmt::Display for Config {
     Persona:        {}
     LLM Server URL: {}
     Model:          {}
+    Persona File:   {}
     History File:   {}
 
   -----------------------------------
@@ -51,6 +52,7 @@ impl fmt::Display for Config {
       self.persona.name,
       self.llm_server_url,
       self.model,
+      if self.persona_file.is_empty() { "None".to_string() } else { self.persona_file.clone() },
       history,
     )
   }
@@ -64,6 +66,7 @@ impl Config {
       persona:        Persona::new(DEFAULT_PERSONA),
       llm_server_url: DEFAULT_LLM_SERVER_URL.to_string(),
       model:          DEFAULT_MODEL.to_string(),
+      persona_file:   String::new(),
       #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
       history_file:   DEFAULT_HISTORY_FILE.to_string(),
     }
@@ -76,6 +79,7 @@ impl Config {
     config.push(format!("persona: {}",self.persona.name.to_lowercase()));
     config.push(format!("llm_server_url: {}",self.llm_server_url));
     config.push(format!("model: {}",self.model));
+    config.push(format!("persona_file: {}",self.persona_file));
     #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
     config.push(format!("history_file: {}",self.history_file));
     match write(&config_file,config.join("\n")) {
@@ -93,6 +97,7 @@ impl Config {
     config.persona        = Persona::new(util::prompt(format!("Persona: ({}, default: {})",PERSONA_LIST,config.persona.name),config.persona.name).as_str());
     config.llm_server_url = util::prompt(format!("LLM Server URL: (default: {})",config.llm_server_url),config.llm_server_url.clone());
     config.model          = util::prompt(format!("Model: (default: {})",config.model),config.model.clone());
+    config.persona_file   = util::prompt(format!("Persona Bundle Path: (default: none)"),config.persona_file.clone());
     #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
     {
       config.history_file   = util::prompt(format!("History Save File: (default: {})",config.history_file),config.history_file.clone());
@@ -143,6 +148,7 @@ impl Config {
           "persona"        => config.persona = Persona::new(value.as_str()),
           "llm_server_url" => config.llm_server_url = value.clone(),
           "model"          => config.model = value.clone(),
+          "personal_file"  => config.persona_file = value.clone(),
           #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
           "history_file"   => config.history_file = value.clone(),
           // Ignore everything else:
@@ -150,7 +156,18 @@ impl Config {
         };
       }
     }
-    Config::from_args(&config)
+    let mut config: Config = Config::from_args(&config);
+    if !config.persona_file.is_empty() {
+      log::info!("Loading persona from bundle {}",config.persona_file);
+      match Persona::load(&config.persona_file) {
+        Some(persona) => config.persona = persona,
+        None          => {
+          log::warn!("Failed to load persona from {}, using {}.",config.persona_file,config.persona.name);
+          config.persona_file = String::new();
+        },
+      }
+    }
+    config
   }
 
   pub fn path_from_args(default_path: &String) -> String {
@@ -192,6 +209,10 @@ impl Config {
         },
         "--model" => match args.next() {
           Some(value) => config.model = value.trim().to_string(),
+          None => {},
+        },
+        "--persona-file" => match args.next() {
+          Some(value) => config.persona_file = value.trim().to_string(),
           None => {},
         },
         #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]

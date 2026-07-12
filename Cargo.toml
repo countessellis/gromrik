@@ -101,12 +101,16 @@ regex = "1.12"
 reqwest = "0.13"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+tar = "0.4.46"
 ureq = { version = "3.3", features = ["json"] }
 url = "2.5"
 winit = "0.30.13"
+zstd = "0.13.3"
 
 [build-dependencies]
 chrono = "0.4"
+tar = "0.4.46"
+zstd = "0.13.3"
 
 [profile.dev]
 opt-level = 1

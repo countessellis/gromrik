@@ -75,24 +75,28 @@ impl GUI {
 
 impl eframe::App for GUI {
  fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+    let mut received_tokens = false;
     while let Ok(event) = self.recv.try_recv() {
       match event {
         StreamEvent::Token(token) => {
           self.current_reply.push_str(&token);
           self.scroll_to_bottom = true;
-        }
+          received_tokens = true;
+        },
         StreamEvent::Finished => {
-          if !self.current_reply.trim().is_empty() {
-            self.history_lines.push((self.config.persona.name.to_string(), self.current_reply.clone()));
-          } else {
+          if !received_tokens && self.current_reply.trim().is_empty() {
             log::error!("Failed to reach Ollama. Check your connection!");
             let fallback = self.config.persona.dismissal.clone();
             self.history_lines.push((self.config.persona.name.to_string(), fallback));
+          } else {
+            if !self.current_reply.trim().is_empty() {
+              self.history_lines.push((self.config.persona.name.to_string(), self.current_reply.clone()));
+            }
           }
           self.current_reply.clear();
           self.is_answering = false;
           self.scroll_to_bottom = true;
-        }
+        },
       }
     }
     let image_uri = format!("bytes://persona_bg_{}.png", self.config.persona.name.clone());
