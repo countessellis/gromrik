@@ -30,24 +30,24 @@ fn main() {
   writeln!(codegen_file,"// =========================================================================\n").unwrap();
   let resources_dir = Path::new(&manifest_dir).join("resources");
   let entries = fs::read_dir(&resources_dir).expect("Critical Error: 'resources' directory missing");
-  let bundle_dir = Path::new(&manifest_dir).join("persona_bundles");
-  if !bundle_dir.exists() {
-    fs::create_dir_all(&bundle_dir).expect("Failed to create persona_bundles folder");
+  let persona_bundles_dir = Path::new(&manifest_dir).join("persona_bundles");
+  if !persona_bundles_dir.exists() {
+    fs::create_dir_all(&persona_bundles_dir).expect("Failed to create persona_bundles folder");
   }
   let mut personas: Vec<String> = Vec::new();
   for entry in entries {
     let entry = entry.unwrap();
     let path = entry.path();
     if path.is_dir() {
-      let bundle_dir = path.join("bundle");
-      if bundle_dir.exists() && bundle_dir.is_dir() {
+      let persona_source_dir = path.join("bundle");
+      if persona_source_dir.exists() && persona_source_dir.is_dir() {
         let persona_name = path.file_name().unwrap().to_str().unwrap().to_string();
         let output_path = path.join(format!("{}.grom", persona_name));
         let output_file = File::create(&output_path).unwrap();
         let compressor = Encoder::new(output_file, 15).unwrap().auto_finish();
         let mut tar_builder = Builder::new(compressor);
-        let bundle_files = fs::read_dir(&bundle_dir).unwrap();
-        for file_entry in bundle_files {
+        let persona_source_files = fs::read_dir(&persona_source_dir).unwrap();
+        for file_entry in persona_source_files {
           let file_entry = file_entry.unwrap();
           let file_path = file_entry.path();
           if file_path.is_file() {
@@ -57,8 +57,8 @@ fn main() {
         }
         tar_builder.finish().unwrap();
         let _encoder_ = tar_builder.into_inner().unwrap();
-        let bundle_file_path = bundle_dir.join(format!("{}.grom",persona_name));
-        fs::copy(&output_path,&bundle_file_path).unwrap();
+        let persona_bundle_path = persona_bundles_dir.join(format!("{}.grom",persona_name));
+        fs::copy(&output_path,&persona_bundle_path).unwrap();
         if let Ok(relative_path) = output_path.strip_prefix(&manifest_dir) {
           println!("cargo:warning=Auto-bundled persona: {}",relative_path.display());
         } else {
