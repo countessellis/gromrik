@@ -1,5 +1,17 @@
+# Rust build directory
 /target
+
+# Gromrik config directory
 /config/
+
+# Chat save location:
 /history/
+
+# Application log location:
 /logs/
+
+# Generated Persona Bundles (these are copied to persona_bundles after generation)
+resources/**/*.grom
+
+# VI temporary swap files:
 *.swp

@@ -30,6 +30,10 @@ fn main() {
   writeln!(codegen_file,"// =========================================================================\n").unwrap();
   let resources_dir = Path::new(&manifest_dir).join("resources");
   let entries = fs::read_dir(&resources_dir).expect("Critical Error: 'resources' directory missing");
+  let bundle_dir = Path::new(&manifest_dir).join("persona_bundles");
+  if !bundle_dir.exists() {
+    fs::create_dir_all(&bundle_dir).expect("Failed to create persona_bundles folder");
+  }
   let mut personas: Vec<String> = Vec::new();
   for entry in entries {
     let entry = entry.unwrap();
@@ -52,17 +56,18 @@ fn main() {
           }
         }
         tar_builder.finish().unwrap();
-        personas.push(persona_name);
         let _encoder_ = tar_builder.into_inner().unwrap();
+        let bundle_file_path = bundle_dir.join(format!("{}.grom",persona_name));
+        fs::copy(&output_path,&bundle_file_path).unwrap();
         if let Ok(relative_path) = output_path.strip_prefix(&manifest_dir) {
-          println!("cargo:warning=Auto-bundled persona: {}", relative_path.display());
+          println!("cargo:warning=Auto-bundled persona: {}",relative_path.display());
         } else {
-          println!("cargo:warning=Auto-bundled persona: {}", output_path.display());
+          println!("cargo:warning=Auto-bundled persona: {}",output_path.display());
         }
+        personas.push(persona_name);
       }
     }
   }
-
   writeln!(codegen_file, "#[cfg(all(feature = \"gromrik\", feature = \"lyranis\"))]").unwrap();
   writeln!(codegen_file, "pub(crate) const BUNDLE_LIST: &[&str] = &[").unwrap();
   for persona in &personas {
@@ -75,5 +80,4 @@ fn main() {
     writeln!(codegen_file,"  include_bytes!(\"../resources/{}/{}.grom\"),",persona,persona).unwrap();
   }
   writeln!(codegen_file, "];").unwrap();
-
 }
