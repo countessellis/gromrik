@@ -178,6 +178,7 @@ impl Persona {
     let mut metadata_json = Vec::new();
     let mut prompt: String = String::new();
     let mut text_image: String = String::new();
+    #[cfg(any(feature = "gui",feature = "web"))]
     let mut full_image: Vec<u8> = Vec::new();
     #[cfg(feature = "gui")]
     let mut layout_json = Vec::new();
