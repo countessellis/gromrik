@@ -34,9 +34,10 @@ github-release: ## Release the current version to Github
 		echo "Pre-existing release v$(VERSION) found. Deleting old release to overwrite..." && \
 		gh release delete v$(VERSION) -y \
 	) || true
-	@echo "Creating GitHub Release v$(VERSION) with all executable binaries..."
+	@echo "Creating GitHub Release v$(VERSION) with all executable binaries and persona bundles..."
 	gh release create v$(VERSION) \
 		$$(find ./target/release -maxdepth 1 -type f -executable) \
+                ./persona_bundles/*.grom \
 		--title "Release v$(VERSION)" \
 		--notes "$(TAG_NOTES)"
 
