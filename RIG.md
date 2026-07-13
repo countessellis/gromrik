@@ -14,9 +14,10 @@ The hardware I am using for my AI rig for this project is as follows:
 * CPU: AMD Ryzen 7 8745HS (8 cores, 16 threads, Zen 4 architecture)
 * GPU: Integrated AMD Radeon 780M (12 compute units, 24 AI accelerators, gfx1103 architecture)
   * Execution Backend: Operates via the Vulkan API backend (via Ollama/Mesa RADV) to ensure 100% stable GPU tensor compute offloading on Linux, bypassing the platform constraints of mobile ROCm.
-* RAM: 16GB 5600 MT/s DDR5 SODIMM (Dual-Channel)
+* RAM: 24GB 5600 MT/s DDR5 SODIMM (Dual-Channel)
   * Inference Impact: Dictates the absolute performance ceiling for token-generation, delivering a shared theoretical bandwidth of 89.6 GB/s (translating to a real-world speed of ~12–15 tokens per second on 7B/8B models).
-  * VRAM Topology: Carved out manually via the motherboard BIOS's UMA Frame Buffer Size (set to 4GB or 8GB) to allocate hardware-addressable memory space directly to the iGPU.
+  * While it's recommended to dedicate a larger amount of memory to the GPU, my BIOS does not support this, so memory is allocated as requested by the CPU or GPU.
+  * Note: I previously had 16GB in a single stick. I added an 8GB, raising it to 24GB. There are performance costs to doing this, when usage passes the direct 8GB of the larger stick, keeping small enough models, the size I'm using, makes this unlikely to impact performance.
 * Storage: 512GB Kioxia BG6 NVMe M.2 SSD (KBG60ZNV512G).
   * Interface and Performance: PCIe Gen 4.0 x4 link, delivering sequential read speeds up to ~4,600 MB/s. It leverages Host Memory Buffer (HMB) caching architecture.
   * AI Relevance: Handles initial Model Deployment Latency. The ~4.6 GB/s Gen 4 throughput guarantees that 4-bit quantized 7B/8B model weights (~4.5GB–5.5GB files) are read from non-volatile flash memory and fully populated into the system RAM buffer in under 2 seconds, neutralizing cold-start application lag. 

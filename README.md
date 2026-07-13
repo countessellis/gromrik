@@ -135,9 +135,9 @@ In addition, you can load a persona bundle, aka a .grom file. You can set the bu
 
 Bundles present in the repo:
 
-    resources/gromrik/gromrik.grom   | Gromrik, the grumpy dwarf the applicaiton is named for.
-    resources/lyranis/lyranis.grom   | Lyranis, an elven illusionist, spending her life in a dream.
-    resources/velissa/velissa.grom   | Velissa, a faeries assassion, plotting her next job.
+    persona_bundles/gromrik.grom   | Gromrik, the grumpy dwarf the applicaiton is named for.
+    persona_bundles/lyranis.grom   | Lyranis, an elven illusionist, spending her life in a dream.
+    persona_bundles/velissa.grom   | Velissa, a faeries assassion, plotting her next job.
 
 
 ## Building Gromrik
