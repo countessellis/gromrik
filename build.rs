@@ -43,22 +43,23 @@ fn main() {
       if persona_source_dir.exists() && persona_source_dir.is_dir() {
         let persona_name = path.file_name().unwrap().to_str().unwrap().to_string();
         let output_path = path.join(format!("{}.grom", persona_name));
-        let output_file = File::create(&output_path).unwrap();
-        let compressor = Encoder::new(output_file, 15).unwrap().auto_finish();
-        let mut tar_builder = Builder::new(compressor);
-        let persona_source_files = fs::read_dir(&persona_source_dir).unwrap();
-        for file_entry in persona_source_files {
-          let file_entry = file_entry.unwrap();
-          let file_path = file_entry.path();
-          if file_path.is_file() {
-            let filename = file_path.file_name().unwrap().to_str().unwrap();
-            tar_builder.append_path_with_name(&file_path, filename).unwrap();
+        {
+          let output_file = File::create(&output_path).unwrap();
+          let compressor = Encoder::new(output_file, 15).unwrap().auto_finish();
+          let mut tar_builder = Builder::new(compressor);
+          let persona_source_files = fs::read_dir(&persona_source_dir).unwrap();
+          for file_entry in persona_source_files {
+            let file_entry = file_entry.unwrap();
+            let file_path = file_entry.path();
+            if file_path.is_file() {
+              let filename = file_path.file_name().unwrap().to_str().unwrap();
+              tar_builder.append_path_with_name(&file_path, filename).unwrap();
+            }
           }
-        }
-        tar_builder.finish().unwrap();
-        let _encoder_ = tar_builder.into_inner().unwrap();
-        let persona_bundle_path = persona_bundles_dir.join(format!("{}.grom",persona_name));
-        fs::copy(&output_path,&persona_bundle_path).unwrap();
+          tar_builder.finish().unwrap();
+        } 
+        let persona_bundle_path = persona_bundles_dir.join(format!("{}.grom", persona_name));
+        fs::copy(&output_path, &persona_bundle_path).unwrap();
         if let Ok(relative_path) = output_path.strip_prefix(&manifest_dir) {
           println!("cargo:warning=Auto-bundled persona: {}",relative_path.display());
         } else {
