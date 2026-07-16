@@ -24,6 +24,8 @@ pub(crate) struct TUI {
   pub(crate) recv:          Receiver<StreamEvent>,
   pub(crate) input:         String,
   pub(crate) history_lines: Vec<(String, String)>,
+  pub(crate) input_history: Vec<String>,
+  pub(crate) input_index:   usize,
   pub(crate) current_reply: String,
   pub(crate) is_answering:  bool,
   pub(crate) scroll_offset: u16,
@@ -40,6 +42,8 @@ impl TUI {
       recv:          recv,
       input:         String::new(),
       history_lines: initial_greeting,
+      input_history: Vec::new(),
+      input_index:   0,
       current_reply: String::new(),
       is_answering:  false,
       scroll_offset: 0,
@@ -252,6 +256,8 @@ impl TUI {
                   KeyCode::Enter => {
                     if !self.input.is_empty() && !self.is_answering {
                       let prompt = self.input.trim().to_string();
+                      self.input_history.push(prompt.clone());
+                      self.input_index = self.input_history.len().saturating_sub(1);
                       if prompt.starts_with('/') {
                         let parts: Vec<&str> = prompt.split_whitespace().collect();
                         let command = parts[0].to_lowercase();

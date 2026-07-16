@@ -11,14 +11,16 @@ use crate::defaults::*;
 
 #[derive(Clone)]
 pub(crate) struct GUI {
-  pub(crate) config: Config,
-  pub(crate) chat: Chat,
-  pub(crate) recv: Receiver<StreamEvent>,
-  pub(crate) history_lines: Vec<(String, String)>, 
-  pub(crate) current_reply: String,                 
-  pub(crate) is_answering:  bool,
+  pub(crate) config:           Config,
+  pub(crate) chat:             Chat,
+  pub(crate) recv:             Receiver<StreamEvent>,
+  pub(crate) history_lines:    Vec<(String, String)>, 
+  pub(crate) input_history:    Vec<String>,
+  pub(crate) input_index:      usize,
+  pub(crate) current_reply:    String,                 
+  pub(crate) is_answering:     bool,
   pub(crate) scroll_to_bottom: bool,
-  pub(crate) input: String,
+  pub(crate) input:            String,
 }
 
 impl GUI {
@@ -26,14 +28,16 @@ impl GUI {
     let (send, recv) = unbounded::<StreamEvent>();
     let initial_greeting = vec![(config.persona.name.clone(),config.persona.greeting.clone())];
     GUI {
-      config: config.clone(),
-      chat: Chat::new(&config,send),
-      recv: recv,
-      history_lines: initial_greeting,
-      current_reply: String::new(),
-      is_answering: false,
+      config:           config.clone(),
+      chat:             Chat::new(&config,send),
+      recv:             recv,
+      history_lines:    initial_greeting,
+      input_history:    Vec::new(),
+      input_index:      0,
+      current_reply:    String::new(),
+      is_answering:     false,
       scroll_to_bottom: false,
-      input: String::new(),
+      input:            String::new(),
     }
   }
 
@@ -175,6 +179,8 @@ impl eframe::App for GUI {
       if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
         let prompt = self.input.trim().to_string();
         if !prompt.is_empty() {
+          self.input_history.push(prompt.clone());
+          self.input_index = self.input_history.len().saturating_sub(1);
           if prompt.starts_with('/') {
             let parts: Vec<&str> = prompt.split_whitespace().collect();
             let command = parts[0].to_lowercase();
