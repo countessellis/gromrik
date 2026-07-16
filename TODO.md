@@ -2,7 +2,6 @@
 
 ## TODO for 1.1.X
 
-* Fix issue with --persona <persona> that only works for hard coded personas, not bundled ones.
 * Up arrow to previous input in GUI, maybe TUI.
 * Deal with window resize, either by preventing it, scaling dimensions with window, or locking dimensions to image and making image not scale with window.
 

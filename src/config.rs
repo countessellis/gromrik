@@ -97,7 +97,12 @@ impl Config {
       Ok(mode) => mode,
       Err(_)   => Default::default(),
     };
-    config.persona        = Persona::new(util::prompt(format!("Persona: ({}, default: {})",config.personas.keys().cloned().collect::<Vec<String>>().join(","),config.persona.name),config.persona.name).as_str());
+    let persona: String  = util::prompt(format!("Persona: ({}, default: {})",config.personas.keys().cloned().collect::<Vec<String>>().join(","),config.persona.name),config.persona.name.clone());
+    if let Some(persona) = config.personas.get(&persona) {
+      config.persona = persona.clone();
+    } else {
+      log::warn!("Persona {} not found, using default of {}.",persona,DEFAULT_PERSONA);
+    }
     config.llm_server_url = util::prompt(format!("LLM Server URL: (default: {})",config.llm_server_url),config.llm_server_url.clone());
     config.model          = util::prompt(format!("Model: (default: {})",config.model),config.model.clone());
     config.persona_file   = util::prompt(format!("Persona Bundle Path: (default: none)"),config.persona_file.clone());
@@ -148,7 +153,13 @@ impl Config {
             Ok(mode) => mode,
             Err(_)   => Default::default(),
           },
-          "persona"        => config.persona = Persona::new(value.as_str()),
+          "persona"        => {
+            if let Some(persona) = config.personas.get(&value) {
+              config.persona = persona.clone();
+            } else {
+              log::warn!("Persona {} not found, using default of {}.",value,DEFAULT_PERSONA);
+            }
+          }
           "llm_server_url" => config.llm_server_url = value.clone(),
           "model"          => config.model = value.clone(),
           "personal_file"  => config.persona_file = value.clone(),
@@ -206,7 +217,13 @@ impl Config {
         "--config" => {},
         // Process options:
         "--persona" => match args.next() {
-          Some(value) => config.persona = Persona::new(value.trim()),
+          Some(value) => {
+            if let Some(persona) = config.personas.get(&value) {
+              config.persona = persona.clone();
+            } else {
+              log::warn!("Persona {} not found, using default of {}.",value,DEFAULT_PERSONA);
+            }
+          },
           None => {},
         },
         "--llm-server-url" => match args.next() {
