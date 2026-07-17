@@ -2,7 +2,6 @@
 
 ## TODO for 1.1.X
 
-* Up arrow to previous input in GUI, maybe TUI.
 * Deal with window resize, either by preventing it, scaling dimensions with window, or locking dimensions to image and making image not scale with window.
 
 ## TODO for 1.2.X+

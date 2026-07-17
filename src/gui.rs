@@ -93,6 +93,7 @@ impl eframe::App for GUI {
             self.history_lines.push((self.config.persona.name.to_string(), fallback));
           } else {
             if !self.current_reply.trim().is_empty() {
+              log::debug!("Response from Ollama completed: \n\n{}\n",self.current_reply);
               self.history_lines.push((self.config.persona.name.to_string(), self.current_reply.clone()));
             }
           }
@@ -176,11 +177,31 @@ impl eframe::App for GUI {
         .hint_text(format!("Ask {}...",self.config.persona.name))
         .char_limit(60);
       let response = ui.add(text_edit);
+      if response.has_focus() {
+        ui.input(|input| {
+          if input.key_pressed(egui::Key::ArrowUp) {
+            if !self.input_history.is_empty() && self.input_index > 0 {
+              self.input_index = self.input_index.saturating_sub(1);
+              self.input = self.input_history[self.input_index].clone();
+            }
+          } else if input.key_pressed(egui::Key::ArrowDown) {
+            if !self.input_history.is_empty() {
+              self.input_index = self.input_index.saturating_add(1);
+              if self.input_index < self.input_history.len() {
+                self.input = self.input_history[self.input_index].clone();
+              } else {
+                self.input_index = self.input_history.len();
+                self.input.clear();
+              }
+            }
+          }
+        });
+      }
       if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
         let prompt = self.input.trim().to_string();
         if !prompt.is_empty() {
           self.input_history.push(prompt.clone());
-          self.input_index = self.input_history.len().saturating_sub(1);
+          self.input_index = self.input_history.len();
           if prompt.starts_with('/') {
             let parts: Vec<&str> = prompt.split_whitespace().collect();
             let command = parts[0].to_lowercase();

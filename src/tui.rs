@@ -56,15 +56,23 @@ impl TUI {
       Ok(()) =>  {
         let mut terminal = ratatui::init();
         loop {
+          let mut received_tokens = false;
           while let Ok(event) = self.recv.try_recv() {
             match event {
-              StreamEvent::Token(token) => self.current_reply.push_str(&token),
+              StreamEvent::Token(token) => {
+                self.current_reply.push_str(&token);
+                received_tokens = true;
+              },
               StreamEvent::Finished => {
-                if !self.current_reply.trim().is_empty() {
-                  self.history_lines.push((self.config.persona.name.clone(), self.current_reply.clone()));
-                } else {
+                if !self.is_answering {
+                  continue;
+                }
+                if !received_tokens && self.current_reply.trim().is_empty() {
                   log::error!("Failed to reach Ollama. Check your connection!");
                   self.history_lines.push((self.config.persona.name.clone(),self.config.persona.dismissal.clone()));
+                } else {
+                  log::debug!("Response from Ollama completed: \n\n{}\n",self.current_reply);
+                  self.history_lines.push((self.config.persona.name.clone(), self.current_reply.clone()));
                 }
                 self.current_reply.clear();
                 self.is_answering = false;
@@ -242,22 +250,39 @@ impl TUI {
                       self.input.pop();
                     }
                   },
-                  KeyCode::Up => {
+                  KeyCode::PageUp => {
                     self.user_scrolled = true;
                     if self.scroll_offset > 0 {
                       self.scroll_offset -= 1;
                     }
                   },
-                  KeyCode::Down => {
+                  KeyCode::PageDown => {
                     if self.user_scrolled {
                       self.scroll_offset = self.scroll_offset.saturating_add(1);
+                    }
+                  },
+                  KeyCode::Up => {
+                    if !self.input_history.is_empty() && self.input_index > 0 {
+                      self.input_index -= 1;
+                      self.input = self.input_history[self.input_index].clone();
+                    }
+                  },
+                  KeyCode::Down => {
+                    if !self.input_history.is_empty() {
+                      self.input_index = self.input_index.saturating_add(1);
+                      if self.input_index < self.input_history.len() {
+                        self.input = self.input_history[self.input_index].clone();
+                      } else {
+                        self.input_index = self.input_history.len();
+                        self.input.clear();
+                      }
                     }
                   },
                   KeyCode::Enter => {
                     if !self.input.is_empty() && !self.is_answering {
                       let prompt = self.input.trim().to_string();
                       self.input_history.push(prompt.clone());
-                      self.input_index = self.input_history.len().saturating_sub(1);
+                      self.input_index = self.input_history.len();
                       if prompt.starts_with('/') {
                         let parts: Vec<&str> = prompt.split_whitespace().collect();
                         let command = parts[0].to_lowercase();
