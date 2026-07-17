@@ -3,6 +3,7 @@
 ## TODO for 1.1.X
 
 * Deal with window resize, either by preventing it, scaling dimensions with window, or locking dimensions to image and making image not scale with window.
+* Tab complete for commands.
 
 ## TODO for 1.2.X+
 
