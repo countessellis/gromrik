@@ -118,12 +118,26 @@ impl eframe::App for GUI {
     let ui_builder = egui::UiBuilder::new()
       .max_rect(target_rect)
       .layout(egui::Layout::top_down(egui::Align::LEFT));
+    let scroll_view_id = egui::Id::new("chat_scroll_viewport");
+    let mut scroll_delta = 0.0;
+    ui.input(|input| {
+      if input.key_pressed(egui::Key::PageUp) {
+        scroll_delta = 100.0;
+      } else if input.key_pressed(egui::Key::PageDown) {
+        scroll_delta = -100.0;
+      }
+    });
     ui.scope_builder(ui_builder, |ui| {
       egui::ScrollArea::vertical()
+        .id_salt(scroll_view_id)
         .max_height(self.config.persona.dimensions.chat_height)
         .auto_shrink([false, false])
         .show(ui, |ui| {
           ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
+            if scroll_delta != 0.0 {
+              ui.scroll_with_delta(egui::vec2(0.0, scroll_delta));
+              self.scroll_to_bottom = false;
+            }
             for (sender, content) in &self.history_lines {
               let name_color = if sender == "You" {
                 egui::Color32::from_rgb(100,180,220)
@@ -146,10 +160,10 @@ impl eframe::App for GUI {
               let streaming_parchment_text = egui::RichText::new(self.current_reply.as_str()).color(egui::Color32::from_rgb(245, 235, 215));
               ui.add(egui::Label::new(streaming_parchment_text));
             }
-            if self.scroll_to_bottom {
+            if self.scroll_to_bottom && scroll_delta == 0.0 {
               let scroll_anchor = ui.label(""); 
-              scroll_anchor.scroll_to_me(Some(egui::Align::BOTTOM)); // Snap camera downward [local]
-              self.scroll_to_bottom = false; // Reset state flag [local]
+              scroll_anchor.scroll_to_me(Some(egui::Align::BOTTOM));
+              self.scroll_to_bottom = false;
             }
           });
         });
@@ -175,7 +189,7 @@ impl eframe::App for GUI {
         .desired_width(self.config.persona.dimensions.input_width)
         .text_color(egui::Color32::from_rgb(245,235,215)) 
         .hint_text(format!("Ask {}...",self.config.persona.name))
-        .char_limit(60);
+        .char_limit(200);
       let response = ui.add(text_edit);
       if response.has_focus() {
         ui.input(|input| {
