@@ -1,8 +1,10 @@
-# Gromrik
+# Gromrik's Ghosts
 
 Gromrik is a displeased Dwarf who will grumpily tell you why you're wrong and not worth his time. He might give helpful ideas, if you don't mind him insulting you.
 
 There is also a second character, Lyranis, a dreamy elven illusionist. She might give you helpful inspiration, if you can follow the threads.
+
+Includes as bundles are Velissa, a faerie assassin, Branlink Brightheart, a gnome paladin, and Zahirik, a goblin merchant.
 
 
 ## Requirements
@@ -26,7 +28,7 @@ Usage: gromrik [(OPTIONS)]
 Options:
 
   --config <CONFIG FILE PATH>          Path to the config file (default: config/gromrik.cfg)
-  --persona <PERSONA>                  Persona to interact with (default: gromrik, choices: gromrik, lyranis, commoner
+  --persona <PERSONA>                  Persona to interact with (default: gromrik, choices: gromrik, lyranis, commoner) Note: bundled personas can also be users.
   --llm-server-url <LLM SERVER URL>    URL for LLM chat endpoint, must be compatible with Ollama's /api/chat (default: http://localhost:11434/api/chat)
   --model <LLM MODEL NAME>             LLM model to use for interacting with the persona, must be already loaded into the server (default: qwen2.5:7b-instruct-q4_K_M)
   --persona-file <PERSONA BUNDLE PATH> Path to a persona bundle (.grom file) to use instead of the preloaded personas. (default: none)
@@ -137,10 +139,12 @@ Bundles present in the repo:
 
     persona_bundles/gromrik.grom   | Gromrik, the grumpy dwarf the applicaiton is named for.
     persona_bundles/lyranis.grom   | Lyranis, an elven illusionist, spending her life in a dream.
-    persona_bundles/velissa.grom   | Velissa, a faeries assassion, plotting her next job.
+    persona_bundles/velissa.grom   | Velissa, a faerie assassin, plotting her next job.
+    persona_bundles/bramlink.grom  | Branlink Brightheart, a gnome paladin wanting the best for everyone.
+    persona_bundles/zahirik.grom   | Zahirik, a goblin merchant whose only desires in life are haggling and trading.
 
 
-## Building Gromrik
+## Building Gromrik's Ghosts
 
 ### Init
 

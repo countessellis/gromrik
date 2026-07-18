@@ -5,7 +5,7 @@ use crate::logger::LogTarget;
 
 // Build Constants:
 
-pub(crate) const APP_NAME:    &str = "Gromrik";
+pub(crate) const APP_NAME:    &str = "Gromrik's Ghosts";
 pub(crate) const BUILD_NAME:  &str = env!("BUILD_NAME");
 pub(crate) const VERSION_ID:  &str = env!("CARGO_PKG_VERSION");
 pub(crate) const BUILD_TIME:  &str = env!("BUILD_TIME");
