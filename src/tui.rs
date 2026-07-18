@@ -128,13 +128,13 @@ impl TUI {
               ])
               .split(left_column);
             let left_persona_image_pane = vertical_chunks[0];
-            let persona_image: Text = Text::from(text_image).fg(Color::Rgb(91,55,36));
+            let persona_image: Text = Text::from(text_image).fg(Color::Rgb(130,108,72));
             let persona_block = Block::default()
               .title(ratatui::text::Line::from(format!(" {} ", self.config.persona.name)).fg(Color::Rgb(245,235,215)).bold())
               .title_alignment(Alignment::Center)
               .borders(Borders::ALL)
               .border_type(BorderType::Rounded)
-              .border_style(Style::default().fg(Color::Rgb(194,162,105)));
+              .border_style(Style::default().fg(Color::Rgb(25,145,95)));
             let inner_height = left_persona_image_pane.height.saturating_sub(2);
             if (raw_persona_image_height as u16) < inner_height {
               frame.render_widget(persona_block, left_persona_image_pane);
