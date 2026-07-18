@@ -2,7 +2,7 @@
 
 ## TODO for 1.1.X
 
-* Tab complete for commands.
+NSTR
 
 ## TODO for 1.2.X+
 
