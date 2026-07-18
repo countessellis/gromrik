@@ -108,18 +108,19 @@ impl eframe::App for GUI {
         },
       }
     }
-    // 2. Configure the Option 1 Gold Bevel Frame properties for egui 0.35.0
-    let bevel_frame = egui::Frame::new() // Changed from .none() to .new()
-      .inner_margin(1.0)
-      .stroke(egui::Stroke::new(2.5, egui::Color32::from_rgb(130,108,72)))
-      .shadow(egui::Shadow {
-        offset: [2,2],
-        blur: 8,
-        spread: 1,
-        color: egui::Color32::from_black_alpha(180),
-      });
-
+    let bevel_frame = egui::Frame::new().inner_margin(1.0).stroke(egui::Stroke::new(2.5,egui::Color32::from_rgb(130,108,72)));
     bevel_frame.show(ui, |ui| {
+      let image_uri = format!("bytes://persona_bg_{}.png", self.config.persona.name.clone());
+      let image_source = egui::ImageSource::Bytes {
+        uri: std::borrow::Cow::Owned(image_uri.clone()),
+        bytes: egui::load::Bytes::from(self.config.persona.full_image.clone()),
+      };
+      let image_resp = ui.add(
+        egui::Image::new(image_source).max_size(egui::vec2(ui.available_width(), ui.available_height()))
+      );
+      if image_resp.interact(egui::Sense::drag()).dragged() {
+        ui.ctx().send_viewport_cmd(egui::ViewportCommand::StartDrag);
+      }
       let image_uri = format!("bytes://persona_bg_{}.png", self.config.persona.name.clone());
       let image_source = egui::ImageSource::Bytes {
         uri: std::borrow::Cow::Owned(image_uri.clone()),
@@ -206,27 +207,95 @@ impl eframe::App for GUI {
           .desired_width(self.config.persona.dimensions.input_width)
           .text_color(egui::Color32::from_rgb(245,235,215)) 
           .hint_text(format!("Ask {}...",self.config.persona.name))
-          .char_limit(200);
+          .char_limit(200)
+          .lock_focus(true);
         let response = ui.add(text_edit);
         if response.has_focus() {
-          ui.input(|input| {
-            if input.key_pressed(egui::Key::ArrowUp) {
-              if !self.input_history.is_empty() && self.input_index > 0 {
-                self.input_index = self.input_index.saturating_sub(1);
-                self.input = self.input_history[self.input_index].clone();
+          let tab_pressed = ui.ctx().input(|i| i.key_pressed(egui::Key::Tab));
+          let up_pressed = ui.ctx().input(|i| i.key_pressed(egui::Key::ArrowUp));
+          let down_pressed = ui.ctx().input(|i| i.key_pressed(egui::Key::ArrowDown));
+          if tab_pressed {
+            ui.ctx().memory_mut(|mem| mem.request_focus(response.id));
+            let commands = vec![ "/clear","/reset","/persona ","/save ","/load ","/exit","/quit","/help"];
+            if self.input.starts_with('/') {
+              let current_input = self.input.to_lowercase();
+              if current_input.starts_with("/persona ") {
+                let prefix = &self.input["/persona ".len()..];
+                let prefix_lower = prefix.to_lowercase();
+                let mut persona_names: Vec<String> = self.config.personas.keys().cloned().collect();
+                persona_names.sort();
+                let matches: Vec<&String> = persona_names.iter().filter(|name| name.to_lowercase().starts_with(&prefix_lower)).collect();
+                if !matches.is_empty() {
+                  let current_index = matches.iter().position(|name| **name == prefix);
+                  let next_match = match current_index {
+                    Some(idx) => matches[(idx + 1) % matches.len()],
+                    None => matches[0],
+                  };
+                  self.input = format!("/persona {}", next_match);
+                  if let Some(mut state) = egui::TextEdit::load_state(ui.ctx(), response.id) {
+                    state.cursor.set_char_range(Some(egui::text::CCursorRange::one(
+                      egui::text::CCursor::new(self.input.chars().count())
+                    )));
+                    egui::TextEdit::store_state(ui.ctx(), response.id, state);
+                  }
+                }
               }
-            } else if input.key_pressed(egui::Key::ArrowDown) {
-              if !self.input_history.is_empty() {
-                self.input_index = self.input_index.saturating_add(1);
-                if self.input_index < self.input_history.len() {
-                  self.input = self.input_history[self.input_index].clone();
-                } else {
-                  self.input_index = self.input_history.len();
-                  self.input.clear();
+              else if current_input.starts_with("/load ") {
+                let argument = &self.input["/load ".len()..];
+                if argument.trim().is_empty() {
+                  self.input = format!("/load {}", self.config.history_file);
+                  if let Some(mut state) = egui::TextEdit::load_state(ui.ctx(), response.id) {
+                    state.cursor.set_char_range(Some(egui::text::CCursorRange::one(
+                      egui::text::CCursor::new(self.input.chars().count())
+                    )));
+                    egui::TextEdit::store_state(ui.ctx(), response.id, state);
+                  }
+                }
+              }
+              else if current_input.starts_with("/save ") {
+                let argument = &self.input["/save ".len()..];
+                if argument.trim().is_empty() {
+                  self.input = format!("/save {}", self.config.history_file);
+                  if let Some(mut state) = egui::TextEdit::load_state(ui.ctx(), response.id) {
+                    state.cursor.set_char_range(Some(egui::text::CCursorRange::one(
+                      egui::text::CCursor::new(self.input.chars().count())
+                    )));
+                    egui::TextEdit::store_state(ui.ctx(), response.id, state);
+                  }
+                }
+              }
+              else if self.input.chars().count() > 1 {
+                let is_already_exact_command = commands.iter().any(|cmd| current_input.starts_with(*cmd));
+                if !is_already_exact_command {
+                  if let Some(matched_command) = commands.iter().find(|cmd| cmd.starts_with(&current_input)) {
+                    self.input = matched_command.to_string();
+                    if let Some(mut state) = egui::TextEdit::load_state(ui.ctx(),response.id) {
+                      state.cursor.set_char_range(Some(egui::text::CCursorRange::one(
+                        egui::text::CCursor::new(self.input.chars().count())
+                      )));
+                      egui::TextEdit::store_state(ui.ctx(),response.id,state);
+                    }
+                  }
                 }
               }
             }
-          });
+          }
+          if up_pressed {
+            if !self.input_history.is_empty() && self.input_index > 0 {
+              self.input_index = self.input_index.saturating_sub(1);
+              self.input = self.input_history[self.input_index].clone();
+            }
+          } else if down_pressed {
+            if !self.input_history.is_empty() {
+              self.input_index = self.input_index.saturating_add(1);
+              if self.input_index < self.input_history.len() {
+                self.input = self.input_history[self.input_index].clone();
+              } else {
+                self.input_index = self.input_history.len();
+                self.input.clear();
+              }
+            }
+          }
         }
         if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
           let prompt = self.input.trim().to_string();
@@ -328,6 +397,21 @@ impl eframe::App for GUI {
         }
       });
     });
+    let r = ui.ctx().input(|i| i.raw.screen_rect).unwrap_or_else(|| ui.max_rect()); 
+    let top_painter = ui.ctx().layer_painter(ui.layer_id());
+    let top_left_highlight = egui::Color32::from_rgb(180,155,115);
+    let top_right_midtone  = egui::Color32::from_rgb(130,108,72);
+    let bottom_left_midtone = egui::Color32::from_rgb(115,95,62);
+    let bottom_right_shadow = egui::Color32::from_rgb(85,70,45);
+    let stroke_width = 2.5;
+    top_painter.line_segment([r.left_top(),r.right_top()],egui::Stroke::new(stroke_width,top_left_highlight));
+    top_painter.line_segment([r.right_top(),r.left_top()],egui::Stroke::new(stroke_width,top_right_midtone));
+    top_painter.line_segment([r.right_top(),r.right_bottom()],egui::Stroke::new(stroke_width,top_right_midtone));
+    top_painter.line_segment([r.right_bottom(),r.right_top()],egui::Stroke::new(stroke_width,bottom_right_shadow));
+    top_painter.line_segment([r.right_bottom(),r.left_bottom()],egui::Stroke::new(stroke_width,bottom_right_shadow));
+    top_painter.line_segment([r.left_bottom(),r.right_bottom()],egui::Stroke::new(stroke_width,bottom_left_midtone));
+    top_painter.line_segment([r.left_bottom(),r.left_top()],egui::Stroke::new(stroke_width,bottom_left_midtone));
+    top_painter.line_segment([r.left_top(),r.left_bottom()],egui::Stroke::new(stroke_width,top_left_highlight));
   }
   fn on_exit(&mut self) {
     println!("{}  {}:\n\n  {}\n",self.config.persona.emoji,self.config.persona.name,self.config.persona.dismissal);

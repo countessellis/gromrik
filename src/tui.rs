@@ -240,6 +240,53 @@ impl TUI {
             if let Ok(Event::Key(key)) = event::read() {
               if key.kind == KeyEventKind::Press {
                 match key.code {
+                  KeyCode::Tab => {
+                    if !self.is_answering {
+                      let commands = vec![
+                        "/clear", "/reset", "/persona ", "/save ", 
+                        "/load ", "/exit", "/quit", "/help"
+                      ];
+                      
+                      if self.input.starts_with('/') {
+                        let current_input = self.input.to_lowercase();
+                        if current_input.starts_with("/persona ") {
+                          let prefix = &self.input["/persona ".len()..];
+                          let prefix_lower = prefix.to_lowercase();
+                          let mut persona_names: Vec<String> = self.config.personas.keys().cloned().collect();
+                          persona_names.sort();
+                          let matches: Vec<&String> = persona_names.iter().filter(|name| name.to_lowercase().starts_with(&prefix_lower)).collect();
+                          if !matches.is_empty() {
+                            let current_index = matches.iter().position(|name| **name == prefix);
+                            let next_match = match current_index {
+                              Some(idx) => matches[(idx + 1) % matches.len()],
+                              None => matches[0],
+                            };
+                            self.input = format!("/persona {}", next_match);
+                          }
+                        }
+                        else if current_input.starts_with("/load ") {
+                          let argument = &self.input["/load ".len()..];
+                          if argument.trim().is_empty() {
+                            self.input = format!("/load {}", self.config.history_file);
+                          }
+                        }
+                        else if current_input.starts_with("/save ") {
+                          let argument = &self.input["/save ".len()..];
+                          if argument.trim().is_empty() {
+                            self.input = format!("/save {}", self.config.history_file);
+                          }
+                        }
+                        else if self.input.chars().count() > 1 {
+                          let is_already_exact_command = commands.iter().any(|cmd| current_input.starts_with(*cmd));
+                          if !is_already_exact_command {
+                            if let Some(matched_command) = commands.iter().find(|cmd| cmd.starts_with(&current_input)) {
+                              self.input = matched_command.to_string();
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
                   KeyCode::Char(c) => {
                     if !self.is_answering {
                       self.input.push(c);
@@ -307,6 +354,7 @@ impl TUI {
                               if let Some (persona) = self.config.personas.get(&label) {
                                 let mut config: Config = self.config.clone();
                                 config.persona = persona.clone();
+                                *self = Self::new(&config);
                                 let _ = terminal.clear();
                                 print!("\x1B[2J\x1B[1;1H"); 
                                 let _ = io::stdout().flush();
