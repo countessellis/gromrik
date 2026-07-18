@@ -10,10 +10,13 @@ use ratatui::{
 };
 use std::time::Duration;
 use std::io;
+use std::thread;
 
 use crate::chat::*;
 use crate::config::*;
 use crate::defaults::*;
+
+use crate::splash;
 
 ///////////// TUI
 
@@ -34,6 +37,7 @@ pub(crate) struct TUI {
 
 impl TUI {
   pub(crate) fn new(config: &Config) -> TUI {
+    Self::splash();
     let (send, recv) = unbounded::<StreamEvent>();
     let initial_greeting = vec![(config.persona.name.clone(),config.persona.greeting.clone())];
     TUI {
@@ -48,6 +52,25 @@ impl TUI {
       is_answering:  false,
       scroll_offset: 0,
       user_scrolled: false,
+    }
+  }
+
+  pub(crate) fn splash() {
+    match terminal::enable_raw_mode() {
+      Ok(()) =>  {
+        let mut terminal = ratatui::init();
+        match terminal.draw(|frame| {
+          let full_area = frame.area();
+          let splash: Text = Text::from(splash::raw_splash()).fg(Color::Rgb(130, 108, 72)).bold();
+          let paragraph = Paragraph::new(splash).alignment(Alignment::Center);
+          frame.render_widget(paragraph,full_area);
+        }) {
+          Ok(_) => thread::sleep(Duration::from_secs(5)),
+          Err(err) => log::error!("Failed to display splash screen: {}",err),
+        }
+        ratatui::restore();
+      },
+      Err(_) => {},
     }
   }
 

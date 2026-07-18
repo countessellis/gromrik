@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 1.1.3
+
+* Changed text splash from Gromrik to all the Ghosts.
+* Added text splash for TUI before displaying the UI.
+* Added image splash for GUI with Gromrik's Ghosts shown before showing the UI.
+* Added auto-focus for input in GUI.
+
 ## 1.1.2
 
 * Added tab completion for / commands.

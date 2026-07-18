@@ -13,11 +13,10 @@ Licensed under the {} License
 }
 
 pub(crate) fn raw_splash() -> String {
-  let splash: &str =  include_str!("../resources/gromrik/gromrik2.txt");
-  format!("\n{}\n",splash)
+  format!("\n{}\n",TEXT_SPLASH)
 }
 
 pub(crate) fn splash() -> String {
   let splash: String =  raw_splash();
-  format!("\n{}\n",Colour::Fixed(52).bold().paint(splash))
+  format!("\n{}\n",Colour::RGB(130, 108, 72).bold().paint(splash))
 }

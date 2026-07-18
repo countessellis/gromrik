@@ -19,6 +19,8 @@ pub(crate) struct GUI {
   pub(crate) input_index:      usize,
   pub(crate) current_reply:    String,                 
   pub(crate) is_answering:     bool,
+  pub(crate) is_first_frame:   bool,
+  pub(crate) boot_time:        std::time::Instant,
   pub(crate) scroll_to_bottom: bool,
   pub(crate) input:            String,
 }
@@ -36,6 +38,8 @@ impl GUI {
       input_index:      0,
       current_reply:    String::new(),
       is_answering:     false,
+      is_first_frame:   true,
+      boot_time:        std::time::Instant::now(),
       scroll_to_bottom: false,
       input:            String::new(),
     }
@@ -81,8 +85,29 @@ impl GUI {
   }
 }
 
+impl GUI {
+  fn splash(&mut self, ui: &mut egui::Ui) -> bool {
+    if self.boot_time.elapsed() < std::time::Duration::from_secs(5) {
+      ui.ctx().request_repaint();
+      let screen_rect = ui.ctx().input(|i| i.raw.screen_rect).unwrap_or_else(|| ui.max_rect());
+      let splash_builder = egui::UiBuilder::new().max_rect(screen_rect).layer_id(egui::LayerId::background());
+      let mut splash_ui = ui.new_child(splash_builder);
+      let image_uri = format!("bytes://splash_{}.png", self.config.persona.name.clone());
+      let image_source = egui::ImageSource::Bytes {
+        uri: std::borrow::Cow::Owned(image_uri.clone()),
+        bytes: egui::load::Bytes::from(FULL_SPLASH),
+      };
+      let splash_image = egui::Image::new(image_source).max_size(screen_rect.size());
+      splash_ui.add(splash_image);
+      return true;
+    }
+    false
+  }
+}
+
 impl eframe::App for GUI {
- fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+  fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+    if self.splash(ui) { return; }
     let mut received_tokens = false;
     while let Ok(event) = self.recv.try_recv() {
       match event {
@@ -210,6 +235,10 @@ impl eframe::App for GUI {
           .char_limit(200)
           .lock_focus(true);
         let response = ui.add(text_edit);
+        if self.is_first_frame {
+          response.request_focus();
+          self.is_first_frame = false;
+        }
         if response.has_focus() {
           let tab_pressed = ui.ctx().input(|i| i.key_pressed(egui::Key::Tab));
           let up_pressed = ui.ctx().input(|i| i.key_pressed(egui::Key::ArrowUp));
