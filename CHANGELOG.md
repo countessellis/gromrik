@@ -5,7 +5,7 @@
 * Added tab completion for / commands.
 * Added history of inputs separate from chat history, and ability to use arrows for previous and next.
 * Page Up and Page Down now scroll the chat history.
-* Revoved normal window controls (close and maximize) and replaced it with a bronze bevel.
+* Removed normal window controls (close and maximize) and replaced it with a bronze bevel.
 * Added Bramlink Brightheart persona (gnome palidin) as a bundle.
 * Added Zahirik persona (goblin merchant) as a bundle.
 * Miscellaneous bug fixes and tweaks.
