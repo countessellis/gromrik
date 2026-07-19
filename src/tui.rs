@@ -10,7 +10,6 @@ use ratatui::{
 };
 use std::time::Duration;
 use std::io;
-use std::thread;
 
 use crate::chat::*;
 use crate::config::*;
@@ -59,14 +58,21 @@ impl TUI {
     match terminal::enable_raw_mode() {
       Ok(()) =>  {
         let mut terminal = ratatui::init();
-        match terminal.draw(|frame| {
-          let full_area = frame.area();
-          let splash: Text = Text::from(splash::raw_splash()).fg(Color::Rgb(130, 108, 72)).bold();
-          let paragraph = Paragraph::new(splash).alignment(Alignment::Center);
-          frame.render_widget(paragraph,full_area);
-        }) {
-          Ok(_) => thread::sleep(Duration::from_secs(5)),
-          Err(err) => log::error!("Failed to display splash screen: {}",err),
+        let start_time = std::time::Instant::now();
+        let total_duration = std::time::Duration::from_secs(6);
+        while start_time.elapsed() < total_duration {
+          let elapsed = start_time.elapsed().as_secs_f32();
+          let fade_factor = if elapsed > 4.0 { ((6.0 - elapsed) / 2.0).clamp(0.0, 1.0) } else { 1.0 };
+          if let Err(err) = terminal.draw(|frame| {
+            let full_area = frame.area();
+            let splash: Text = Text::from(splash::raw_splash()).fg(Color::Rgb((130.0*fade_factor) as u8,(108.0*fade_factor) as u8,(72.0*fade_factor) as u8)).bold();
+            let paragraph = Paragraph::new(splash).alignment(Alignment::Center);
+            frame.render_widget(paragraph, full_area);
+          }) {
+            log::error!("Failed to display splash screen: {}", err);
+            break;
+          }
+          std::thread::sleep(std::time::Duration::from_millis(16));
         }
         ratatui::restore();
       },
