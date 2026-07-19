@@ -6,6 +6,8 @@
 * Added text splash for TUI before displaying the UI.
 * Added image splash for GUI with Gromrik's Ghosts shown before showing the UI.
 * Added auto-focus for input in GUI.
+* Added Melisande persona (satyr minstrella) as a bundle.
+* Miscellaneous bug fixes and tweaks.
 
 ## 1.1.2
 

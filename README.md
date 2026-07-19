@@ -4,8 +4,12 @@ Gromrik is a displeased Dwarf who will grumpily tell you why you're wrong and no
 
 There is also a second character, Lyranis, a dreamy elven illusionist. She might give you helpful inspiration, if you can follow the threads.
 
-Includes as bundles are Velissa, a faerie assassin, Branlink Brightheart, a gnome paladin, and Zahirik, a goblin merchant.
+Includes as bundles are:
 
+* Velissa, a faerie assassin
+* Branlink Brightheart, a gnome paladin 
+* Zahirik, a goblin merchant 
+* Melisande, a satyr minstrella
 
 ## Requirements
 
@@ -137,10 +141,11 @@ In addition, you can load a persona bundle, aka a .grom file. You can set the bu
 
 Bundles present in the repo:
 
+    persona_bundles/bramlink.grom  | Branlink Brightheart, a gnome paladin wanting the best for everyone.
     persona_bundles/gromrik.grom   | Gromrik, the grumpy dwarf the applicaiton is named for.
     persona_bundles/lyranis.grom   | Lyranis, an elven illusionist, spending her life in a dream.
+    persona_bundles/melisande.grom | Melisande, a satyr minstrella, looking for songs and tales.
     persona_bundles/velissa.grom   | Velissa, a faerie assassin, plotting her next job.
-    persona_bundles/bramlink.grom  | Branlink Brightheart, a gnome paladin wanting the best for everyone.
     persona_bundles/zahirik.grom   | Zahirik, a goblin merchant whose only desires in life are haggling and trading.
 
 

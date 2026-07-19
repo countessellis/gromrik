@@ -2,7 +2,7 @@
 
 ## TODO for 1.1.X
 
-NSTR
+* New persona (not yet named) that is a troll scholar/priest/librarian, and very noble of speech.
 
 ## TODO for 1.2.X+
 
