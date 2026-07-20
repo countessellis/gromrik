@@ -271,11 +271,7 @@ impl TUI {
                 match key.code {
                   KeyCode::Tab => {
                     if !self.is_answering {
-                      let commands = vec![
-                        "/clear", "/reset", "/persona ", "/save ", 
-                        "/load ", "/exit", "/quit", "/help"
-                      ];
-                      
+                      let commands = vec!["/clear","/reset","/persona ","/scene ","/save ","/load ","/exit","/quit","/help"];
                       if self.input.starts_with('/') {
                         let current_input = self.input.to_lowercase();
                         if current_input.starts_with("/persona ") {
@@ -394,6 +390,18 @@ impl TUI {
                               self.history_lines.push(("System".to_string(),format!("Please provide a valid persona: {}", self.config.personas.keys().cloned().collect::<Vec<String>>().join(","))));
                             }
                           },
+                          "/scene" => {
+                            if parts.len() > 1 {
+                              let scene: String = parts[1..].join(" ");
+                              self.chat.set_scene(&scene);
+                              self.history_lines.push(("System".to_string(),format!("Scene has been set to: {}",scene)));
+                              self.scroll_offset = 0;
+                              self.user_scrolled = false;
+                              self.input.clear();
+                            } else {
+                              self.history_lines.push(("System".to_string(),format!("Please provide a scene.")));
+                            }
+                          },
                           "/save" => {
                             let filename: String = if parts.len() > 1 { parts[1..].join(" ") } else { self.config.history_file.clone() };
                             let msg = match self.chat.save_history(&filename.to_string(), &self.history_lines) {
@@ -428,6 +436,7 @@ impl TUI {
                               "/clear  - Clear the dispayed chat logs completely.",
                               "/reset  - Resets the current persona.",
                               format!("/persona [persona]  - Switches the active persona, 'persona' must be one of {}.",self.config.personas.keys().cloned().collect::<Vec<String>>().join(",")).as_str(),
+                              "/scene  - Sets the scene for the conversation, argument should be a single sentence.",
                               "/exit  - Safely close and exit the application.",
                               "/quit  - Also safely closes and exits the application.",
                               "/save [filename]  - Save session to a file (or configuration default).",

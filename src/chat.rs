@@ -23,6 +23,7 @@ pub(crate) struct Chat {
   pub(crate) config:  Config,
   pub(crate) agent:   ureq::Agent,
   pub(crate) system:  Message,
+  pub(crate) scene:   String,
   pub(crate) history: Vec<Message>,
   pub(crate) send:    Sender<StreamEvent>,
 }
@@ -80,6 +81,7 @@ impl Chat {
         role:    "system".into(),
         content: util::render(&config.persona.prompt,&HashMap::new()),
       },
+      scene:   String::new(),
       history: Vec::new(),
       send:    send,
     };
@@ -155,11 +157,18 @@ impl Chat {
       role: "user".into(),
       content: input.to_string(),
     };
+    let old_history: String = if !self.scene.is_empty() {
+      let mut old_history: Vec<Message> = vec![Message { role: "system".into(), content: format!("Scene/Context: \"{}\". Always respond in accordance with this scence when replying to the user.",self.scene) } ];
+      old_history.extend_from_slice(&self.history.clone());
+      old_history.into_iter().map(|msg| format!("{}: {}",msg.role,msg.content)).collect::<Vec<String>>().join("\n")
+    } else {
+      self.history.clone().into_iter().map(|msg| format!("{}: {}",msg.role,msg.content)).collect::<Vec<String>>().join("\n")
+    };
     let messages: Vec<Message> = vec![
       self.system.clone(),
       Message {
         role: "system".into(),
-        content: format!("[OLD MEMORY LOG - ONLY reference this if the user uses pronouns like 'instead' or 'that'\n{}",self.history.clone().into_iter().map(|msg| format!("{}: {}",msg.role,msg.content)).collect::<Vec<String>>().join("\n")),
+        content: format!("[OLD MEMORY LOG - ONLY reference this if the user uses pronouns like 'instead' or 'that'\n{}",old_history),
       },
     ];
     self.history.push(new_msg.clone());
@@ -298,6 +307,12 @@ impl Chat {
        self.history.push(Message { role, content: content.clone() });
     }
     Ok(lines)
+  }
+
+  #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
+  pub(crate) fn set_scene(&mut self, scene: &String) {
+    log::info!("Changing scene:\nOld Scene: {}\nNew Scene: {}",self.scene,scene);
+    self.scene = scene.clone();
   }
 }
 
