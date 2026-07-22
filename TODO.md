@@ -2,7 +2,6 @@
 
 ## TODO for 1.1.X
 
-* Troubleshoot /scene and improve how it works.
 * Add scene as a config parameter, argument, persona property, and item in metadata.json.
 * Add persistence of conversation between persona changes (the persona remembers when you return) with a system message to let it know you left and returned.
 
