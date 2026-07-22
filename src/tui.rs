@@ -14,6 +14,7 @@ use std::io;
 use crate::chat::*;
 use crate::config::*;
 use crate::defaults::*;
+use crate::history::*;
 
 use crate::splash;
 
@@ -25,8 +26,7 @@ pub(crate) struct TUI {
   pub(crate) chat:          Chat,
   pub(crate) recv:          Receiver<StreamEvent>,
   pub(crate) input:         String,
-  pub(crate) history_lines: Vec<(String, String)>,
-  pub(crate) input_history: Vec<String>,
+  pub(crate) histories:     Histories,
   pub(crate) input_index:   usize,
   pub(crate) current_reply: String,
   pub(crate) is_answering:  bool,
@@ -38,20 +38,22 @@ impl TUI {
   pub(crate) fn new(config: &Config) -> TUI {
     Self::splash();
     let (send, recv) = unbounded::<StreamEvent>();
-    let initial_greeting = vec![(config.persona.name.clone(),config.persona.greeting.clone())];
+    let initial_greeting = (config.persona.name.clone(),config.persona.greeting.clone());
     let mut chat: Chat = Chat::new(&config,send);
     if !config.scene.is_empty() {
       chat.set_scene(&config.scene);
     } else if !config.persona.scene.is_empty() {
       chat.set_scene(&config.persona.scene);
     }
+    let mut histories: Histories = Histories::new();
+    histories.switch(&config.persona.name);
+    histories.insert_line(&initial_greeting);
     TUI {
       config:        config.clone(),
       chat:          chat,
       recv:          recv,
       input:         String::new(),
-      history_lines: initial_greeting,
-      input_history: Vec::new(),
+      histories:     histories,
       input_index:   0,
       current_reply: String::new(),
       is_answering:  false,
@@ -104,10 +106,10 @@ impl TUI {
                 }
                 if !received_tokens && self.current_reply.trim().is_empty() {
                   log::error!("Failed to reach Ollama. Check your connection!");
-                  self.history_lines.push((self.config.persona.name.clone(),self.config.persona.dismissal.clone()));
+                  self.histories.insert_line(&(self.config.persona.name.clone(),self.config.persona.dismissal.clone()));
                 } else {
                   log::debug!("Response from Ollama completed: \n\n{}\n",self.current_reply);
-                  self.history_lines.push((self.config.persona.name.clone(), self.current_reply.clone()));
+                  self.histories.insert_line(&(self.config.persona.name.clone(), self.current_reply.clone()));
                 }
                 self.current_reply.clear();
                 self.is_answering = false;
@@ -202,7 +204,7 @@ impl TUI {
             let inner_width = inner_area.width as usize;
             let inner_height = inner_area.height;
             let mut text_spans = Vec::new();
-            for (sender, content) in &self.history_lines {
+            for (sender, content) in self.histories.display() {
               let header_line = if sender == "You" {
                 ratatui::text::Line::from(format!("{} {}:",HUMAN_EMOJI,sender)).fg(Color::Rgb(100, 180, 220)).bold()
               } else if sender == "System" {
@@ -340,18 +342,18 @@ impl TUI {
                     }
                   },
                   KeyCode::Up => {
-                    if !self.input_history.is_empty() && self.input_index > 0 {
+                    if !self.histories.inputs().is_empty() && self.input_index > 0 {
                       self.input_index -= 1;
-                      self.input = self.input_history[self.input_index].clone();
+                      self.input = self.histories.inputs()[self.input_index].clone();
                     }
                   },
                   KeyCode::Down => {
-                    if !self.input_history.is_empty() {
+                    if !self.histories.inputs().is_empty() {
                       self.input_index = self.input_index.saturating_add(1);
-                      if self.input_index < self.input_history.len() {
-                        self.input = self.input_history[self.input_index].clone();
+                      if self.input_index < self.histories.inputs().len() {
+                        self.input = self.histories.inputs()[self.input_index].clone();
                       } else {
-                        self.input_index = self.input_history.len();
+                        self.input_index = self.histories.inputs().len();
                         self.input.clear();
                       }
                     }
@@ -359,14 +361,14 @@ impl TUI {
                   KeyCode::Enter => {
                     if !self.input.is_empty() && !self.is_answering {
                       let prompt = self.input.trim().to_string();
-                      self.input_history.push(prompt.clone());
-                      self.input_index = self.input_history.len();
+                      self.histories.insert_input(&prompt.clone());
+                      self.input_index = self.histories.inputs().len();
                       if prompt.starts_with('/') {
                         let parts: Vec<&str> = prompt.split_whitespace().collect();
                         let command = parts[0].to_lowercase();
                         match command.as_str() {
                           "/clear" => {
-                            self.history_lines.clear();
+                            self.histories.clear();
                             self.current_reply.clear();
                             self.is_answering = false;
                             self.scroll_offset = 0;
@@ -390,31 +392,31 @@ impl TUI {
                                 print!("\x1B[2J\x1B[1;1H"); 
                                 let _ = io::stdout().flush();
                               } else {
-                                self.history_lines.push(("System".to_string(),format!("Please provide a valid persona: {}", self.config.personas.keys().cloned().collect::<Vec<String>>().join(","))));
+                                self.histories.insert_line(&("System".to_string(),format!("Please provide a valid persona: {}", self.config.personas.keys().cloned().collect::<Vec<String>>().join(","))));
                               }
                             } else {
-                              self.history_lines.push(("System".to_string(),format!("Please provide a valid persona: {}", self.config.personas.keys().cloned().collect::<Vec<String>>().join(","))));
+                              self.histories.insert_line(&("System".to_string(),format!("Please provide a valid persona: {}", self.config.personas.keys().cloned().collect::<Vec<String>>().join(","))));
                             }
                           },
                           "/scene" => {
                             if parts.len() > 1 {
                               let scene: String = parts[1..].join(" ");
                               self.chat.set_scene(&scene);
-                              self.history_lines.push(("System".to_string(),format!("Scene has been set to: {}",scene)));
+                              self.histories.insert_line(&("System".to_string(),format!("Scene has been set to: {}",scene)));
                               self.scroll_offset = 0;
                               self.user_scrolled = false;
                               self.input.clear();
                             } else {
-                              self.history_lines.push(("System".to_string(),format!("Please provide a scene.")));
+                              self.histories.insert_line(&("System".to_string(),format!("Please provide a scene.")));
                             }
                           },
                           "/save" => {
                             let filename: String = if parts.len() > 1 { parts[1..].join(" ") } else { self.config.history_file.clone() };
-                            let msg = match self.chat.save_history(&filename.to_string(), &self.history_lines) {
+                            let msg = match self.chat.save_history(&filename.to_string(),&self.histories.lines()) {
                               Ok(_) => format!("History successfully saved to {}.", filename),
                               Err(err) => format!("Save error: {}",err)
                             };
-                            self.history_lines.push(("System".to_string(),msg));
+                            self.histories.insert_line(&("System".to_string(),msg));
                             self.scroll_offset = 0;
                             self.user_scrolled = false;
                             self.input.clear();
@@ -423,12 +425,12 @@ impl TUI {
                             let filename: String = if parts.len() > 1 { parts[1..].join(" ") } else { self.config.history_file.clone() };
                             let msg = match self.chat.load_history(&filename.to_string()) {
                               Ok(loaded_data) => {
-                                self.history_lines = loaded_data;
+                                self.histories.load(&loaded_data);
                                 format!("History loaded from {} successfully.", filename)
                               },
                               Err(e) => format!("Load error: {}", e)
                             };
-                            self.history_lines.push(("System".to_string(), msg));
+                            self.histories.insert_line(&("System".to_string(), msg));
                             self.scroll_offset = 0;
                             self.user_scrolled = false;
                             self.input.clear();
@@ -449,13 +451,13 @@ impl TUI {
                               "/load [filename]  - Restore session and model context from a file.",
                               "",
                             ].join("\n");
-                            self.history_lines.push(("System".to_string(), help_text));
+                            self.histories.insert_line(&("System".to_string(), help_text));
                             self.scroll_offset = 0;
                             self.user_scrolled = false;
                             self.input.clear();
                           },
                           _ => {
-                            self.history_lines.push(("System".to_string(),format!("Unknown command: '{}'. Type /help for available commands.", command)));
+                            self.histories.insert_line(&("System".to_string(),format!("Unknown command: '{}'. Type /help for available commands.", command)));
                             self.user_scrolled = false;
                             self.input.clear();
                           },
@@ -465,7 +467,7 @@ impl TUI {
                       } else {
                         self.user_scrolled = false; 
                         self.scroll_offset = 0;
-                        self.history_lines.push(("You".to_string(), prompt.clone()));
+                        self.histories.insert_line(&("You".to_string(), prompt.clone()));
                         self.is_answering = true;
                         if let Err(e) = self.chat.chat(&prompt) {
                           log::error!("Failed to launch chat context thread: {}", e);
