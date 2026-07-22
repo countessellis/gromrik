@@ -314,11 +314,15 @@ impl Chat {
     }
   }
 
-
   #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
   pub(crate) fn set_scene(&mut self, scene: &String) {
     log::info!("Changing scene:\nOld Scene: {}\nNew Scene: {}",self.scene,scene);
     self.scene = scene.clone();
+  }
+
+  #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
+  pub(crate) fn has_returned(&mut self) {
+    self.history.push(Message { role: "system".into(), content: "The user walked away but has now returned.".into() });
   }
 }
 

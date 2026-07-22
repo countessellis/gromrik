@@ -36,7 +36,7 @@ impl GUI {
       chat.set_scene(&config.persona.scene);
     }
     let mut histories: Histories = Histories::new();
-    histories.switch(&config.persona.name);
+    histories.switch(&config.persona.label);
     histories.insert_line(&initial_greeting);
     GUI {
       config:           config.clone(),
@@ -376,19 +376,23 @@ impl eframe::App for GUI {
                       let label: String = parts[1..].join(" ");
                       if let Some (persona) = self.config.personas.get(&label) {
                         self.config.persona = persona.clone();
-                        self.histories.switch(&self.config.persona.name);
-                        if self.histories.lines().is_empty() {
-                          self.greet();
-                        }
                         let (send, recv) = unbounded::<StreamEvent>();
                         self.recv = recv;
                         self.chat = Chat::new(&self.config,send);
+                        self.histories.switch(&self.config.persona.label);
+                        if self.histories.lines().is_empty() {
+                          self.greet();
+                          self.chat.load_history(self.histories.lines());
+                        } else {
+                          self.chat.load_history(self.histories.lines());
+                          self.histories.insert_line(&("System".to_string(),format!("You have returned to talking to {}.",self.config.persona.name)));
+                          self.chat.has_returned();
+                        }
                         if !self.config.scene.is_empty() {
                           self.chat.set_scene(&self.config.scene);
                         } else if !self.config.persona.scene.is_empty() {
                           self.chat.set_scene(&self.config.persona.scene);
                         }
-                        self.chat.load_history(self.histories.lines());
                         self.current_reply.clear();
                         self.is_answering = false;
                         self.scroll_to_bottom = false;
