@@ -39,9 +39,15 @@ impl TUI {
     Self::splash();
     let (send, recv) = unbounded::<StreamEvent>();
     let initial_greeting = vec![(config.persona.name.clone(),config.persona.greeting.clone())];
+    let mut chat: Chat = Chat::new(&config,send);
+    if !config.scene.is_empty() {
+      chat.set_scene(&config.scene);
+    } else if !config.persona.scene.is_empty() {
+      chat.set_scene(&config.persona.scene);
+    }
     TUI {
       config:        config.clone(),
-      chat:          Chat::new(&config,send),
+      chat:          chat,
       recv:          recv,
       input:         String::new(),
       history_lines: initial_greeting,

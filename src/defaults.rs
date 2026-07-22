@@ -120,6 +120,8 @@ pub(crate) const GROMRIK_GREETING:  &str = "Bah! Why are you bothering me?";
 pub(crate) const GROMRIK_DISMISSAL: &str = "Go away!";
 #[cfg(feature = "gromrik")]
 pub(crate) const GROMRIK_EMOJI:     &str = "\u{1F624}\u{26Cf}\u{FE0F}";
+#[cfg(feature = "gromrik")]
+pub(crate) const GROMRIK_SCENE:     &str = "You are at the village tavern drinking beer when the user sat down across from you and started talking.";
 
 // Lyranis Persona Constants:
 
@@ -129,6 +131,8 @@ pub(crate) const LYRANIS_GREETING:  &str = "I wonder... Oh! Fine greetings, stra
 pub(crate) const LYRANIS_DISMISSAL: &str = "Now what was I contemplating again...?";
 #[cfg(feature = "lyranis")]
 pub(crate) const LYRANIS_EMOJI:     &str = "\u{1F9DD}\u{1F52E}";
+#[cfg(feature = "lyranis")]
+pub(crate) const LYRANIS_SCENE:     &str = "You are at the village's magic shop looking at potions when the user approaches you and starts talking.";
 
 // Commoner Persona Constants:
 pub(crate) const COMMONER_TRAITS:        &[&str] = &["rustic", "weathered", "cheerful", "anxious", "rebellious", "humble", "curious", "shrewd"];

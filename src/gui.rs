@@ -29,9 +29,15 @@ impl GUI {
   pub(crate) fn new(config: &Config) -> GUI {
     let (send, recv) = unbounded::<StreamEvent>();
     let initial_greeting = vec![(config.persona.name.clone(),config.persona.greeting.clone())];
+    let mut chat: Chat = Chat::new(&config,send);
+    if !config.scene.is_empty() {
+      chat.set_scene(&config.scene);
+    } else if !config.persona.scene.is_empty() {
+      chat.set_scene(&config.persona.scene);
+    }
     GUI {
       config:           config.clone(),
-      chat:             Chat::new(&config,send),
+      chat:             chat,
       recv:             recv,
       history_lines:    initial_greeting,
       input_history:    Vec::new(),

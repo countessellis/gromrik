@@ -18,9 +18,15 @@ pub(crate) struct CLI {
 impl CLI {
   pub(crate) fn new(config: &Config) -> CLI {
     let (send, recv) = unbounded::<StreamEvent>();
+    let mut chat: Chat = Chat::new(&config,send);
+    if !config.scene.is_empty() {
+      chat.set_scene(&config.scene);
+    } else if !config.persona.scene.is_empty() {
+      chat.set_scene(&config.persona.scene);
+    }
     CLI {
      config: config.clone(),
-     chat:   Chat::new(&config,send),
+     chat:   chat,
      recv:   recv,
     }
   }

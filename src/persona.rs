@@ -14,6 +14,7 @@ pub(crate) struct Persona {
   pub(crate) label:      String,
   pub(crate) name:       String,
   pub(crate) prompt:     String,
+  pub(crate) scene:      String,
   pub(crate) greeting:   String,
   pub(crate) dismissal:  String,
   pub(crate) emoji:      String,
@@ -40,8 +41,9 @@ pub(crate) struct ChatDimensions {
 
 #[derive(Deserialize)]
 struct PersonaMetadata {
-  label:      String,
+  label:     String,
   name:      String,
+  scene:     String,
   greeting:  String,
   dismissal: String,
   emoji:     String,
@@ -77,6 +79,7 @@ impl Persona {
     Persona {
       label:      "commoner".to_string(),
       name:       "Commoner".to_string(),
+      scene:      String::new(),
       prompt:     COMMONER_SYSTEM_PROMPT.to_string(),
       greeting:   COMMONER_GREETING.to_string(),
       dismissal:  COMMONER_DISMISSAL.to_string(),
@@ -104,6 +107,7 @@ impl Persona {
     Persona {
       label:      "gromrik".to_string(),
       name:       "Gromrik".to_string(),
+      scene:      GROMRIK_SCENE.to_string(),
       prompt:     GROMRIK_PROMPT.to_string(),
       greeting:   GROMRIK_GREETING.to_string(),
       dismissal:  GROMRIK_DISMISSAL.to_string(),
@@ -131,6 +135,7 @@ impl Persona {
     Persona {
       label:      "lyranis".to_string(),
       name:       "Lyranis".to_string(),
+      scene:      LYRANIS_SCENE.to_string(),
       prompt:     LYRANIS_PROMPT.to_string(),
       greeting:   LYRANIS_GREETING.to_string(),
       dismissal:  LYRANIS_DISMISSAL.to_string(),
@@ -217,6 +222,7 @@ impl Persona {
     Some(Self {
       label: meta.label,
       name: meta.name,
+      scene: meta.scene,
       greeting: meta.greeting,
       dismissal: meta.dismissal,
       emoji: meta.emoji,

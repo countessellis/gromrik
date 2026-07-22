@@ -14,6 +14,7 @@ use crate::util;
 pub(crate) struct Config {
   pub(crate) ranas:          String,
   pub(crate) mode:           Mode,
+  pub(crate) scene:          String,
   pub(crate) persona:        Persona,
   pub(crate) personas:       HashMap<String,Persona>,
   pub(crate) llm_server_url: String,
@@ -42,6 +43,7 @@ impl fmt::Display for Config {
   -----------------------------------
 
     Mode:           {}
+    Scene:          {}
     Persona:        {}
     LLM Server URL: {}
     Model:          {}
@@ -51,6 +53,7 @@ impl fmt::Display for Config {
   -----------------------------------
 ",
       self.mode,
+      if self.scene.is_empty() { "None".to_string() } else { self.scene.clone() },
       self.persona.name,
       self.llm_server_url,
       self.model,
@@ -65,6 +68,7 @@ impl Config {
     Config {
       ranas:          util::bin_name(),
       mode:           Mode::mode(),
+      scene:          String::new(),
       persona:        Persona::new(DEFAULT_PERSONA),
       personas:       Persona::gather(),
       llm_server_url: DEFAULT_LLM_SERVER_URL.to_string(),
@@ -79,6 +83,7 @@ impl Config {
     let config_file: String = util::build_path(&config_file,&"config".to_string());
     let mut config: Vec<String> = Vec::new();
     config.push(format!("mode: {}",self.mode));
+    config.push(format!("scene: {}",self.scene));
     config.push(format!("persona: {}",self.persona.name.to_lowercase()));
     config.push(format!("llm_server_url: {}",self.llm_server_url));
     config.push(format!("model: {}",self.model));
@@ -97,6 +102,7 @@ impl Config {
       Ok(mode) => mode,
       Err(_)   => Default::default(),
     };
+    config.scene         = util::prompt(format!("Scene: (default: none)"),config.scene.clone());
     let persona: String  = util::prompt(format!("Persona: ({}, default: {})",config.personas.keys().cloned().collect::<Vec<String>>().join(","),config.persona.name),config.persona.name.clone());
     if let Some(persona) = config.personas.get(&persona) {
       config.persona = persona.clone();
@@ -153,6 +159,7 @@ impl Config {
             Ok(mode) => mode,
             Err(_)   => Default::default(),
           },
+          "scene"          => config.scene = value.clone(),
           "persona"        => {
             if let Some(persona) = config.personas.get(&value) {
               config.persona = persona.clone();
@@ -216,6 +223,10 @@ impl Config {
         // Ignore flags processed elsewhere:
         "--config" => {},
         // Process options:
+        "--scene" => match args.next() {
+          Some(value) => config.scene = value.trim().to_string(),
+          None => {},
+        },
         "--persona" => match args.next() {
           Some(value) => {
             if let Some(persona) = config.personas.get(&value) {
