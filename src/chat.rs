@@ -281,7 +281,7 @@ impl Chat {
   }
 
   #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
-  pub(crate) fn load_history(&mut self, filename: &String) -> Result<Vec<(String, String)>, String> {
+  pub(crate) fn load_history_file(&mut self, filename: &String) -> Result<Vec<(String, String)>, String> {
     let mut file = match File::open(filename) {
       Ok(file) => file,
       Err(err) => return Err(format!("No saved history file found at {}: {}",filename,err)),
@@ -295,8 +295,14 @@ impl Chat {
       Ok(lines) => lines,
       Err(err)  => return Err(format!("Saved history file {} is corrupted: {}",filename,err)),
     };
+    self.load_history(&lines);
+    Ok(lines)
+  }
+
+  #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
+  pub(crate) fn load_history(&mut self, lines: &Vec<(String, String)>) {
     self.history.clear();
-    for (sender, content) in &lines {
+    for (sender, content) in lines {
        let role = if sender == "You" {
          "user".into()
        } else if sender == "System" {
@@ -306,8 +312,8 @@ impl Chat {
        };
        self.history.push(Message { role, content: content.clone() });
     }
-    Ok(lines)
   }
+
 
   #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
   pub(crate) fn set_scene(&mut self, scene: &String) {

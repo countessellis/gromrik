@@ -2,7 +2,7 @@
 
 ## TODO for 1.1.X
 
-* Add persistence of conversation between persona changes (the persona remembers when you return) with a system message to let it know you left and returned.
+NSTR
 
 ## TODO for 1.2.X+
 

@@ -88,6 +88,11 @@ impl TUI {
     }
   }
 
+  pub(crate) fn greet(&mut self) {
+    let initial_greeting = (self.config.persona.name.clone(),self.config.persona.greeting.clone());
+    self.histories.insert_line(&initial_greeting);
+  }
+
   pub(crate) fn run(&mut self) {
     match terminal::enable_raw_mode() {
       Ok(()) =>  {
@@ -385,9 +390,25 @@ impl TUI {
                             if parts.len() > 1 {
                               let label = parts[1..].join(" ");
                               if let Some (persona) = self.config.personas.get(&label) {
-                                let mut config: Config = self.config.clone();
-                                config.persona = persona.clone();
-                                *self = Self::new(&config);
+                                self.config.persona = persona.clone();
+                                self.histories.switch(&self.config.persona.name);
+                                if self.histories.lines().is_empty() {
+                                  self.greet();
+                                }
+                                let (send, recv) = unbounded::<StreamEvent>();
+                                self.recv = recv;
+                                self.chat = Chat::new(&self.config,send);
+                                if !self.config.scene.is_empty() {
+                                  self.chat.set_scene(&self.config.scene);
+                                } else if !self.config.persona.scene.is_empty() {
+                                  self.chat.set_scene(&self.config.persona.scene);
+                                }
+                                self.chat.load_history(self.histories.lines());
+                                self.current_reply.clear();
+                                self.is_answering = false;
+                                self.scroll_offset = 0;
+                                self.user_scrolled = false;
+                                self.input.clear();
                                 let _ = terminal.clear();
                                 print!("\x1B[2J\x1B[1;1H"); 
                                 let _ = io::stdout().flush();
@@ -423,7 +444,7 @@ impl TUI {
                           },
                           "/load" => {
                             let filename: String = if parts.len() > 1 { parts[1..].join(" ") } else { self.config.history_file.clone() };
-                            let msg = match self.chat.load_history(&filename.to_string()) {
+                            let msg = match self.chat.load_history_file(&filename.to_string()) {
                               Ok(loaded_data) => {
                                 self.histories.load(&loaded_data);
                                 format!("History loaded from {} successfully.", filename)
