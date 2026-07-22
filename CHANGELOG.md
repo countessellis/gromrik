@@ -8,6 +8,7 @@
 * Added auto-focus for input in GUI.
 * Added setting of scene, for customizing the conversation, using /scnene.
 * Added Melisande persona (satyr minstrella) as a bundle.
+* Added Thorvag Ulgun persona (troll scholar) as a bundle.
 * Miscellaneous bug fixes and tweaks.
 
 ## 1.1.2

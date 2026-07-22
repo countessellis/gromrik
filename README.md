@@ -10,6 +10,7 @@ Includes as bundles are:
 * Branlink Brightheart, a gnome paladin 
 * Zahirik, a goblin merchant 
 * Melisande, a satyr minstrella
+* Thorvag Ulgun, a troll scholar and priest
 
 ## Requirements
 
@@ -145,6 +146,7 @@ Bundles present in the repo:
     persona_bundles/gromrik.grom   | Gromrik, the grumpy dwarf the applicaiton is named for.
     persona_bundles/lyranis.grom   | Lyranis, an elven illusionist, spending her life in a dream.
     persona_bundles/melisande.grom | Melisande, a satyr minstrella, looking for songs and tales.
+    persona_bundles/thorvag.grom   | Thorvag Ulgun, a troll scholar and priest, spreading the enlightenment of the northern ice.
     persona_bundles/velissa.grom   | Velissa, a faerie assassin, plotting her next job.
     persona_bundles/zahirik.grom   | Zahirik, a goblin merchant whose only desires in life are haggling and trading.
 

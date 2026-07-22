@@ -5,7 +5,6 @@
 * Troubleshoot /scene and improve how it works.
 * Add scene as a config parameter, argument, persona property, and item in metadata.json.
 * Add persistence of conversation between persona changes (the persona remembers when you return) with a system message to let it know you left and returned.
-* New persona (not yet named) that is a troll scholar/priest/librarian, and very noble of speech.
 
 ## TODO for 1.2.X+
 
