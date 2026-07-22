@@ -22,6 +22,8 @@ Includes as bundles are:
 
 [Licensing Information](LICENSING.md)
 [AI Rig Setup and Optimization](RIG.md)
+[Change Log](CHANGELOG.md)
+[To Do List](TODO.md)
 
 
 ## Usage
