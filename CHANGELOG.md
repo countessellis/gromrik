@@ -6,7 +6,7 @@
 * Added text splash for TUI before displaying the UI.
 * Added image splash for GUI with Gromrik's Ghosts shown before showing the UI.
 * Added auto-focus for input in GUI.
-* Added setting of scene, for customizing the conversation, using /scnene.
+* Added setting of scene, for customizing the conversation, using /scene or proving it in a bundle, in the config file, or from commandline.
 * Added Melisande persona (satyr minstrella) as a bundle.
 * Added Thorvag Ulgun persona (troll scholar) as a bundle.
 * Miscellaneous bug fixes and tweaks.
