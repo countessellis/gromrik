@@ -1,3 +1,5 @@
+#![cfg(any(feature = "tui",feature = "gui",feature = "web"))]
+
 use std::collections::HashMap;
 
 ///////////// History

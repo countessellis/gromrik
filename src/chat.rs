@@ -317,7 +317,6 @@ impl Chat {
     }
   }
 
-  #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
   pub(crate) fn set_scene(&mut self, scene: &String) {
     log::info!("Changing scene:\nOld Scene: {}\nNew Scene: {}",self.scene,scene);
     self.scene = scene.clone();
