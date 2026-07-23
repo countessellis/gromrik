@@ -40,13 +40,15 @@ impl TUI {
     let (send, recv) = unbounded::<StreamEvent>();
     let initial_greeting = (config.persona.name.clone(),config.persona.greeting.clone());
     let mut chat: Chat = Chat::new(&config,send);
-    if !config.scene.is_empty() {
-      chat.set_scene(&config.scene);
-    } else if !config.persona.scene.is_empty() {
-      chat.set_scene(&config.persona.scene);
-    }
     let mut histories: Histories = Histories::new();
     histories.switch(&config.persona.label);
+    if !config.scene.is_empty() {
+      chat.set_scene(&config.scene);
+      histories.insert_line(&("Scene".to_string(),format!("{}",config.scene)));
+    } else if !config.persona.scene.is_empty() {
+      chat.set_scene(&config.persona.scene);
+      histories.insert_line(&("Scene".to_string(),format!("{}",config.persona.scene)));
+    }
     histories.insert_line(&initial_greeting);
     TUI {
       config:        config.clone(),
@@ -214,6 +216,8 @@ impl TUI {
                 ratatui::text::Line::from(format!("{} {}:",HUMAN_EMOJI,sender)).fg(Color::Rgb(100, 180, 220)).bold()
               } else if sender == "System" {
                 ratatui::text::Line::from(format!("{}:", sender)).fg(Color::Rgb(215, 55, 55)).bold()
+              } else if sender == "Scene" {
+                ratatui::text::Line::from(format!("{}:", sender)).fg(Color::Rgb(46,117,89)).bold()
               } else {
                 ratatui::text::Line::from(format!("{}  {}:",self.config.persona.emoji,sender)).fg(Color::Rgb(194, 162, 105)).bold()
               };
@@ -395,6 +399,13 @@ impl TUI {
                                 self.recv = recv;
                                 self.chat = Chat::new(&self.config,send);
                                 self.histories.switch(&self.config.persona.label);
+                                if !self.config.scene.is_empty() {
+                                  self.chat.set_scene(&self.config.scene);
+                                  self.histories.insert_line(&("Scene".to_string(),format!("{}",self.config.scene)));
+                                } else if !self.config.persona.scene.is_empty() {
+                                  self.chat.set_scene(&self.config.persona.scene);
+                                  self.histories.insert_line(&("Scene".to_string(),format!("{}",self.config.persona.scene)));
+                                }
                                 if self.histories.lines().is_empty() {
                                   self.greet();
                                   self.chat.load_history(self.histories.lines());
@@ -402,11 +413,6 @@ impl TUI {
                                   self.chat.load_history(self.histories.lines());
                                   self.histories.insert_line(&("System".to_string(),format!("You have returned to talking to {}.",self.config.persona.name)));
                                   self.chat.has_returned();
-                                }
-                                if !self.config.scene.is_empty() {
-                                  self.chat.set_scene(&self.config.scene);
-                                } else if !self.config.persona.scene.is_empty() {
-                                  self.chat.set_scene(&self.config.persona.scene);
                                 }
                                 self.current_reply.clear();
                                 self.is_answering = false;
@@ -427,7 +433,7 @@ impl TUI {
                             if parts.len() > 1 {
                               let scene: String = parts[1..].join(" ");
                               self.chat.set_scene(&scene);
-                              self.histories.insert_line(&("System".to_string(),format!("Scene has been set to: {}",scene)));
+                              self.histories.insert_line(&("Scene".to_string(),format!("{}",scene)));
                               self.scroll_offset = 0;
                               self.user_scrolled = false;
                               self.input.clear();

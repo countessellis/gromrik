@@ -30,13 +30,15 @@ impl GUI {
     let (send, recv) = unbounded::<StreamEvent>();
     let initial_greeting = (config.persona.name.clone(),config.persona.greeting.clone());
     let mut chat: Chat = Chat::new(&config,send);
-    if !config.scene.is_empty() {
-      chat.set_scene(&config.scene);
-    } else if !config.persona.scene.is_empty() {
-      chat.set_scene(&config.persona.scene);
-    }
     let mut histories: Histories = Histories::new();
     histories.switch(&config.persona.label);
+    if !config.scene.is_empty() {
+      chat.set_scene(&config.scene);
+      histories.insert_line(&("Scene".to_string(),format!("{}",config.scene)));
+    } else if !config.persona.scene.is_empty() {
+      chat.set_scene(&config.persona.scene);
+      histories.insert_line(&("Scene".to_string(),format!("{}",config.persona.scene)));
+    }
     histories.insert_line(&initial_greeting);
     GUI {
       config:           config.clone(),
@@ -211,6 +213,8 @@ impl eframe::App for GUI {
                     egui::Color32::from_rgb(100,180,220)
                   } else if sender == "System" {
                     egui::Color32::from_rgb(215,55,55)
+                  } else if sender == "Scene" {
+                    egui::Color32::from_rgb(46,117,89)
                   } else {
                     egui::Color32::from_rgb(194,162,105)
                   };
@@ -380,6 +384,13 @@ impl eframe::App for GUI {
                         self.recv = recv;
                         self.chat = Chat::new(&self.config,send);
                         self.histories.switch(&self.config.persona.label);
+                        if !self.config.scene.is_empty() {
+                          self.chat.set_scene(&self.config.scene);
+                          self.histories.insert_line(&("Scene".to_string(),format!("{}",self.config.scene)));
+                        } else if !self.config.persona.scene.is_empty() {
+                          self.chat.set_scene(&self.config.persona.scene);
+                          self.histories.insert_line(&("Scene".to_string(),format!("{}",self.config.persona.scene)));
+                        }
                         if self.histories.lines().is_empty() {
                           self.greet();
                           self.chat.load_history(self.histories.lines());
@@ -387,11 +398,6 @@ impl eframe::App for GUI {
                           self.chat.load_history(self.histories.lines());
                           self.histories.insert_line(&("System".to_string(),format!("You have returned to talking to {}.",self.config.persona.name)));
                           self.chat.has_returned();
-                        }
-                        if !self.config.scene.is_empty() {
-                          self.chat.set_scene(&self.config.scene);
-                        } else if !self.config.persona.scene.is_empty() {
-                          self.chat.set_scene(&self.config.persona.scene);
                         }
                         self.current_reply.clear();
                         self.is_answering = false;
@@ -409,7 +415,7 @@ impl eframe::App for GUI {
                     if parts.len() > 1 {
                       let scene: String = parts[1..].join(" ");
                       self.chat.set_scene(&scene);
-                      self.histories.insert_line(&("System".to_string(),format!("Scene has been set to: {}",scene)));
+                      self.histories.insert_line(&("Scene".to_string(),format!("{}",scene)));
                       self.input.clear();
                     } else {
                       self.histories.insert_line(&("System".to_string(),format!("Please provide a scene.")));

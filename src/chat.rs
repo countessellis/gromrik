@@ -307,6 +307,9 @@ impl Chat {
          "user".into()
        } else if sender == "System" {
          continue;
+       } else if sender == "Scene" {
+         self.set_scene(&content);
+         continue;
        } else {
          "assistant".into()
        };
