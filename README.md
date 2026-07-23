@@ -84,13 +84,19 @@ Mode can be set from command line with these options:
     --gui
     --web
 
-Mode can also be defaulted to a specific one by using the binaries:
+Mode (and persona) can also be defaulted to a specific one by using the binaries:
 
+    ghost
     gromrik
     gromrik-cli
     gromrik-tui
     gromrik-gui
     gromrik-web
+    lyranis
+    lyranis-cli
+    lyranis-tui
+    lyranis-gui
+    lyranis-web
 
 Note that config file and command line options change the mode as normal, using the other binaries only changes the default if not set with one or the other.
 
