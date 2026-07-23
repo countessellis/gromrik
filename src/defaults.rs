@@ -148,7 +148,7 @@ pub(crate) const COMMONER_TEXT_IMAGE:    &str    = "\u{1F9D1}";
 // General Includes:
 
 pub(crate) const TEXT_SPLASH:   &str  = include_str!("../resources/ghosts.txt");
-#[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
+#[cfg(any(feature = "gui",feature = "web"))]
 pub(crate) const FULL_SPLASH:   &[u8] = include_bytes!("../resources/ghosts-titled.png");
 pub(crate) const HELP_TEMPLATE: &str  = include_str!("../resources/help.tpl");
 #[cfg(any(feature = "gui",feature = "web"))]
