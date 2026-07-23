@@ -146,6 +146,7 @@ In addition, you can load a persona bundle, aka a .grom file. You can set the bu
 
 Bundles present in the repo:
 
+    persona_bundles/alaric.grom    | Sir Alaric de Winton, a fragile human nobleman looking for a saviour and protector.
     persona_bundles/bramlink.grom  | Branlink Brightheart, a gnome paladin wanting the best for everyone.
     persona_bundles/gromrik.grom   | Gromrik, the grumpy dwarf the applicaiton is named for.
     persona_bundles/lyranis.grom   | Lyranis, an elven illusionist, spending her life in a dream.

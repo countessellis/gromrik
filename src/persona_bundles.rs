@@ -9,6 +9,7 @@
 #[cfg(all(feature = "gromrik", feature = "lyranis"))]
 pub(crate) const BUNDLE_LIST: &[&str] = &[
   "melisande",
+  "alaric",
   "thorvag",
   "bramlink",
   "velissa",
@@ -20,6 +21,7 @@ pub(crate) const BUNDLE_LIST: &[&str] = &[
 #[cfg(all(feature = "gromrik", feature = "lyranis"))]
 pub(crate) const BUNDLED_PERSONAS: &[&[u8]] = &[
   include_bytes!("../resources/melisande/melisande.grom"),
+  include_bytes!("../resources/alaric/alaric.grom"),
   include_bytes!("../resources/thorvag/thorvag.grom"),
   include_bytes!("../resources/bramlink/bramlink.grom"),
   include_bytes!("../resources/velissa/velissa.grom"),

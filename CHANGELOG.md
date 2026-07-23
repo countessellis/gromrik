@@ -10,6 +10,7 @@
 * Added persistence when switching personas then returning the previous.
 * Added Melisande persona (satyr minstrella) as a bundle.
 * Added Thorvag Ulgun persona (troll scholar) as a bundle.
+* Added Sir Alaric de Winton (human nobleman) as a bundle.
 * Miscellaneous bug fixes and tweaks.
 
 ## 1.1.2
