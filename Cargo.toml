@@ -8,7 +8,7 @@ homepage = "https://github.com/countessellis/gromrik"
 readme = "README.md"
 version = "1.1.3"
 edition = "2024"
-default-run = "gromrik"
+default-run = "ghosts"
 
 [features]
 default = ["gromrik","lyranis","cli","tui","gui","web"]
@@ -20,7 +20,7 @@ gui = []
 web = []
 
 [[bin]]
-name = "chat"
+name = "ghosts"
 path = "src/main.rs"
 required-features = ["gromrik","lyranis","cli","tui","gui","web"]
 

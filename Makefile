@@ -51,7 +51,7 @@ clean: ## Clean cargo target directory
 	$(CARGO) clean
 
 full: ## Build full build with all features
-	$(CARGO) build $(RELEASE_FLAG) --bin chat
+	$(CARGO) build $(RELEASE_FLAG) --bin ghosts
 
 commoner: ## Build bare bone build with just commoner persona
 	$(CARGO) build $(RELEASE_FLAG) --bin commoner --no-default-features --features cli,tui,gui,web
