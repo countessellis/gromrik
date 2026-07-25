@@ -1,10 +1,10 @@
 {
-  "chat_left":    500.0,
-  "chat_top":     140.0,
-  "chat_width":   215.0,
-  "chat_height":  390.0,
-  "input_left":   500.0,
-  "input_top":    545.0,
-  "input_width":  170.0,
+  "chat_left":    544.0,
+  "chat_top":     80.0,
+  "chat_width":   210.0,
+  "chat_height":  455.0,
+  "input_left":   535.0,
+  "input_top":    555.0,
+  "input_width":  183.0,
   "input_height": 30.0
 }

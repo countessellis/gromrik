@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 1.1.4
+
+* Standardized dimensions of persona full images (the three added in 1.1.3 were narrower).
+* Miscellaneous bug fixes and tweaks.
+
 ## 1.1.3
 
 * Changed text splash from Gromrik to all the Ghosts.
