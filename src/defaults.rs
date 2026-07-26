@@ -114,8 +114,8 @@ pub(crate) const PERSONA_LIST:  &str = "commoner";
 pub(crate) const LOCATION_LIST: &[&str] = &[
   "inn::The Inn::You are at the village tavern drinking beer when a patron sits down across from you and started talking.",
   "rock::A rock on the outskirts::You are sitting on a rock in the village outskirts, when a traveler approaches and starts talking to you to you.",
-  "chapel::The Chapel::You are at the village chapel praying, when a traveler walked in and started talking to you to you.",
-  "magicshop::The Magic Shop::You are at the village's magic shop looking at potions when a curious seeker approaches and starts talking to you.",
+  "chapel::The Chapel::You are at the village chapel, when a traveler walked in and started talking to you to you.",
+  "magicshop::The Magic Shop::You are at the village's magic shop when a seeker approaches and starts talking to you.",
   "library::The Library::You are in the library when a seeker enters and starts talking to you.",
   "path::A path in the Village::You are walking along a path in the village at night when a traveler stops you and starts talking to you.",
   "market::A stall in the Market::You are at a stall in the village marketplace when a customer approaches and starts talking to you.",
@@ -133,6 +133,17 @@ pub(crate) const GROMRIK_EMOJI:     &str = "\u{1F624}\u{26Cf}\u{FE0F}";
 pub(crate) const GROMRIK_SCENE:     &str = "You are at the village tavern drinking beer when a patron sits down across from you and started talking.";
 #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
 pub(crate) const GROMRIK_LOCATION:  &str    = "inn";
+#[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
+pub(crate) const GROMRIK_LOCATIONS:  &[&str] = &[
+  "inn::The Inn::You are at the village tavern drinking beer when a another patron sits down across from you and starts talking to you.",
+  "rock::A rock on the outskirts::You are sitting on a rock in the village outskirts to get away from people when an interloper approaches and starts talking to you.",
+  "chapel::The Chapel::You are at the village chapel to get away from people when an intruder walks in and starts talking to you.",
+  "magicshop::The Magic Shop::You are at the village's magic shop getting your hammer engraved when a another patron approaches you and starts talking to you.",
+  "library::The Library::You are in the library getting out of the sun when a patron enters and starts talking to you.",
+  "path::A path in the Village::You are walking along a path in the village at night when an interloper stops you and starts talking to you.",
+  "market::A stall in the Market::You are shopping at a stall at the village marketplace when another patron approaches and starts talking to you.",
+  "river::Down by the River::You are down by the river fishing when an interloper approaches scaring the fish and starts talking to you."
+];
 
 // Lyranis Persona Constants:
 
@@ -146,6 +157,17 @@ pub(crate) const LYRANIS_EMOJI:     &str = "\u{1F9DD}\u{1F52E}";
 pub(crate) const LYRANIS_SCENE:     &str = "You are at the village's magic shop looking at potions when a curious seeker approaches you and starts talking.";
 #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
 pub(crate) const LYRANIS_LOCATION:  &str    = "magicshop";
+#[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
+pub(crate) const LYRANIS_LOCATIONS:  &[&str] = &[
+  "inn::The Inn::You are at the village tavern drinking wine and musiing when a curious seeker sits down across from you and starts talking to you.",
+  "rock::A rock on the outskirts::You are sitting on a rock in the village outskirts contemplating the universe when a curious seeker approaches and starts talking to you.",
+  "chapel::The Chapel::You are at the village chapel contemplating the universe when a curious seeker walks in and starts talking to you.",
+  "magicshop::The Magic Shop::You are at the village's magic shop looking at potions when a curious seeker approaches you and starts talking.",
+  "library::The Library::You are in the library researching a new illusion when a curious seeker enters and starts talking to you.",
+  "path::A path in the Village::You are walking along a path in the village at night looking at the stars when a curious seeker stops you and starts talking to you.",
+  "market::A stall in the Market::You are shopping at a stall at the village marketplace when a curious seeker approaches and starts talking to you.",
+  "river::Down by the River::You are down by the river watching light glisten off the water when a curious seeker approaches and starts talking to you."
+];
 
 // Commoner Persona Constants:
 pub(crate) const COMMONER_TRAITS:        &[&str] = &["rustic", "weathered", "cheerful", "anxious", "rebellious", "humble", "curious", "shrewd"];

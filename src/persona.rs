@@ -121,7 +121,7 @@ impl Persona {
       #[cfg(any(feature = "tui", feature = "gui",feature = "web"))]
       location:   GROMRIK_LOCATION.to_string(),
       #[cfg(any(feature = "tui", feature = "gui",feature = "web"))]
-      locations:  Location::defaults(),
+      locations:  Location::explore(Some(&Location::defaults()),GROMRIK_LOCATIONS),
       prompt:     GROMRIK_PROMPT.to_string(),
       greeting:   GROMRIK_GREETING.to_string(),
       dismissal:  GROMRIK_DISMISSAL.to_string(),
@@ -153,7 +153,7 @@ impl Persona {
       #[cfg(any(feature = "tui", feature = "gui",feature = "web"))]
       location:   LYRANIS_LOCATION.to_string(),
       #[cfg(any(feature = "tui", feature = "gui",feature = "web"))]
-      locations:  Location::defaults(),
+      locations:  Location::explore(Some(&Location::defaults()),LYRANIS_LOCATIONS),
       prompt:     LYRANIS_PROMPT.to_string(),
       greeting:   LYRANIS_GREETING.to_string(),
       dismissal:  LYRANIS_DISMISSAL.to_string(),
