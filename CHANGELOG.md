@@ -2,6 +2,7 @@
 
 ## 1.1.4
 
+* Added chooser for location and persona.
 * Standardized dimensions of persona full images (the three added in 1.1.3 were narrower).
 * Miscellaneous bug fixes and tweaks.
 

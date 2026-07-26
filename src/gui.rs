@@ -23,10 +23,21 @@ pub(crate) struct GUI {
   pub(crate) boot_time:        std::time::Instant,
   pub(crate) scroll_to_bottom: bool,
   pub(crate) input:            String,
+  pub(crate) view:             ViewState,
+  pub(crate) chooser_persona:  String,
+  pub(crate) chooser_location: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ViewState {
+  Chat,
+  Chooser,
 }
 
 impl GUI {
   pub(crate) fn new(config: &Config) -> GUI {
+    let mut config: Config = config.clone();
+    let persona: String = config.persona.label.clone();
     let (send, recv) = unbounded::<StreamEvent>();
     let initial_greeting = (config.persona.name.clone(),config.persona.greeting.clone());
     let mut chat: Chat = Chat::new(&config,send);
@@ -36,6 +47,7 @@ impl GUI {
       chat.set_scene(&config.scene);
       histories.insert_line(&("Scene".to_string(),format!("{}",config.scene)));
     } else if !config.persona.scene.is_empty() {
+      config.scene = config.persona.scene.clone();
       chat.set_scene(&config.persona.scene);
       histories.insert_line(&("Scene".to_string(),format!("{}",config.persona.scene)));
     }
@@ -52,6 +64,9 @@ impl GUI {
       boot_time:        std::time::Instant::now(),
       scroll_to_bottom: false,
       input:            String::new(),
+      view:             ViewState::Chat,
+      chooser_persona:  persona,
+      chooser_location: String::new(),
     }
   }
 
@@ -134,6 +149,107 @@ impl eframe::App for GUI {
       Some(alpha) => 255-alpha,
       None => 255,
     };
+    if self.view == ViewState::Chooser {
+      if ui.input(|i| i.key_pressed(egui::Key::Escape)) {
+        self.view = ViewState::Chat;
+      }
+      let target_rect = ui.max_rect();
+      let chooser_builder = egui::UiBuilder::new().max_rect(target_rect).layout(egui::Layout::top_down(egui::Align::LEFT));
+      let theme_color = egui::Color32::from_rgb(130,108,72);
+      ui.visuals_mut().selection.stroke = egui::Stroke::new(1.5, theme_color);
+      ui.visuals_mut().selection.bg_fill = egui::Color32::from_rgb(165,140,100); 
+      ui.scope_builder(chooser_builder, |ui| {
+        egui::Frame::default()
+          .fill(egui::Color32::from_rgb(20, 18, 16))
+          .stroke(egui::Stroke::new(1.5, theme_color))
+          .inner_margin(16.0)
+          .show(ui, |ui| {
+            ui.vertical_centered(|ui| {
+              let title_font = egui::FontId::new(18.0, egui::FontFamily::Name("persona".into()));
+              ui.add(egui::Label::new(egui::RichText::new("Chooser").color(theme_color).font(title_font)));
+              ui.small("Choose options on the left. Press [Escape] to return to chat.");
+            });
+            ui.add_space(15.0);
+            ui.horizontal(|ui| {
+              ui.allocate_ui(egui::vec2(220.0, ui.available_height()), |ui| {
+                ui.vertical(|ui| {
+                  ui.colored_label(theme_color, "📍 Locations");
+                  ui.add_space(4.0);
+                  let mut locations: Vec<String> = self.config.locations.keys().cloned().collect();
+                  locations.sort();
+                  for label in &locations {
+                    if let Some(location) = self.config.locations.get(label) {
+                      let is_selected = self.chooser_location == location.label;
+                      log::debug!("Chooser Location: {}, Checked Location: {}, Selected: {}",self.chooser_location,location.label,is_selected);
+                      let text_color = if is_selected { egui::Color32::from_rgb(20, 18, 16) } else { egui::Color32::from_rgb(245, 235, 215) };
+                      let rich_text = egui::RichText::new(&location.display).color(text_color);
+                      if ui.selectable_label(is_selected,rich_text).clicked() {
+                        self.chooser_location = location.label.clone();
+                        self.config.scene = location.scene.clone();
+                        self.chat.set_scene(&location.scene);
+                        self.histories.insert_line(&("Scene".to_string(), format!("{}", location.scene)));
+                      } 
+                    }
+                  }
+                  ui.add_space(25.0);
+                  ui.separator();
+                  ui.add_space(10.0);
+                  ui.colored_label(theme_color, "👥 Personas");
+                  ui.add_space(4.0);
+                  let mut personas: Vec<String> = self.config.personas.keys().cloned().collect();
+                  personas.sort();
+                  for label in &personas {
+                    if let Some(persona) = self.config.personas.get(label) {
+                      let is_selected = self.chooser_persona == persona.label;
+                      let text_color = if is_selected { egui::Color32::from_rgb(20, 18, 16) } else { egui::Color32::from_rgb(245, 235, 215) };
+                      let rich_text = egui::RichText::new(&persona.name).color(text_color);
+                      if ui.selectable_label(is_selected,rich_text).clicked() {
+                        self.chooser_persona = persona.label.clone();
+                        self.config.persona = persona.clone();
+                        let (send, recv) = unbounded::<StreamEvent>();
+                        self.recv = recv;
+                        self.chat = Chat::new(&self.config, send);
+                        self.histories.switch(&self.config.persona.label);
+                        let empty_history: bool = self.config.scene.is_empty();
+                        if !self.config.scene.is_empty() {
+                          self.chat.set_scene(&self.config.scene);
+                          self.histories.insert_line(&("Scene".to_string(), format!("{}", self.config.scene)));
+                        } else if !self.config.persona.scene.is_empty() {
+                          self.chat.set_scene(&self.config.persona.scene);
+                          self.histories.insert_line(&("Scene".to_string(), format!("{}", self.config.persona.scene)));
+                        }
+                        if empty_history {
+                          self.greet();
+                          self.chat.load_history(self.histories.lines());
+                        } else {
+                          self.chat.load_history(self.histories.lines());
+                          self.histories.insert_line(&("System".to_string(), format!("You have returned to talking to {}.", self.config.persona.name)));
+                          self.chat.has_returned();
+                        }
+                      }
+                    }
+                  }
+                });
+              });
+              ui.separator();
+              ui.vertical(|ui| {
+                ui.colored_label(theme_color, "🔍 Context Preview");
+                ui.add_space(8.0);
+                ui.strong("Active Character:");
+                ui.label(format!("{}", self.config.persona.name));
+                ui.add_space(10.0);
+                ui.strong("Active Scene Setting:");
+                ui.label(format!("{}", self.config.scene));
+                ui.add_space(40.0);
+                if ui.button("🚀 Confirm and Close Setup").clicked() {
+                  self.view = ViewState::Chat;
+                }
+              });
+            });
+          });
+      });
+      return;
+    }
     let mut received_tokens = false;
     while let Ok(event) = self.recv.try_recv() {
       match event {
@@ -239,250 +355,266 @@ impl eframe::App for GUI {
                 }
               });
             });
-        });
-        let input_rect = egui::Rect::from_min_size(
-          egui::pos2(self.config.persona.dimensions.input_left,self.config.persona.dimensions.input_top),
-          egui::vec2(self.config.persona.dimensions.input_width,self.config.persona.dimensions.input_height),
-        );
-        let input_builder = egui::UiBuilder::new()
-          .max_rect(input_rect)
-          .layout(egui::Layout::top_down(egui::Align::LEFT));
-        ui.scope_builder(input_builder, |ui| {
-          if self.is_answering { ui.ctx().request_repaint(); }
-          ui.style_mut().visuals.weak_text_color = Some(egui::Color32::from_rgb(180,180,185));
-          let subtle_input_frame = egui::Frame::default()
-            .fill(egui::Color32::from_rgba_premultiplied(25,20,15,75))
-            .stroke(egui::Stroke::NONE)
-            .corner_radius(egui::CornerRadius::same(4)) 
-            .inner_margin(egui::Margin::symmetric(6,4)); 
-          let text_edit = egui::TextEdit::singleline(&mut self.input)
-            .frame(subtle_input_frame)
-            .margin(egui::Margin::ZERO)
-            .desired_width(self.config.persona.dimensions.input_width)
-            .text_color(egui::Color32::from_rgb(245,235,215)) 
-            .hint_text(format!("Ask {}...",self.config.persona.name))
-            .char_limit(200)
-            .lock_focus(true);
-          let response = ui.add(text_edit);
-          if self.is_first_frame && alpha == 255 {
-            response.request_focus();
-            self.is_first_frame = false;
-          }
-          if response.has_focus() {
-            let tab_pressed = ui.ctx().input(|i| i.key_pressed(egui::Key::Tab));
-            let up_pressed = ui.ctx().input(|i| i.key_pressed(egui::Key::ArrowUp));
-            let down_pressed = ui.ctx().input(|i| i.key_pressed(egui::Key::ArrowDown));
-            if tab_pressed {
-              ui.ctx().memory_mut(|mem| mem.request_focus(response.id));
-              let commands = vec![ "/clear","/reset","/persona ","/scene ","/save ","/load ","/exit","/quit","/help"];
-              if self.input.starts_with('/') {
-                let current_input = self.input.to_lowercase();
-                if current_input.starts_with("/persona ") {
-                  let prefix = &self.input["/persona ".len()..];
-                  let prefix_lower = prefix.to_lowercase();
-                  let mut persona_names: Vec<String> = self.config.personas.keys().cloned().collect();
-                  persona_names.sort();
-                  let matches: Vec<&String> = persona_names.iter().filter(|name| name.to_lowercase().starts_with(&prefix_lower)).collect();
-                  if !matches.is_empty() {
-                    let current_index = matches.iter().position(|name| **name == prefix);
-                    let next_match = match current_index {
-                      Some(idx) => matches[(idx + 1) % matches.len()],
-                      None => matches[0],
-                    };
-                    self.input = format!("/persona {}", next_match);
-                    if let Some(mut state) = egui::TextEdit::load_state(ui.ctx(), response.id) {
-                      state.cursor.set_char_range(Some(egui::text::CCursorRange::one(
-                        egui::text::CCursor::new(self.input.chars().count())
-                      )));
-                      egui::TextEdit::store_state(ui.ctx(), response.id, state);
-                    }
-                  }
-                }
-                else if current_input.starts_with("/load ") {
-                  let argument = &self.input["/load ".len()..];
-                  if argument.trim().is_empty() {
-                    self.input = format!("/load {}", self.config.history_file);
-                    if let Some(mut state) = egui::TextEdit::load_state(ui.ctx(), response.id) {
-                      state.cursor.set_char_range(Some(egui::text::CCursorRange::one(
-                        egui::text::CCursor::new(self.input.chars().count())
-                      )));
-                      egui::TextEdit::store_state(ui.ctx(), response.id, state);
-                    }
-                  }
-                }
-                else if current_input.starts_with("/save ") {
-                  let argument = &self.input["/save ".len()..];
-                  if argument.trim().is_empty() {
-                    self.input = format!("/save {}", self.config.history_file);
-                    if let Some(mut state) = egui::TextEdit::load_state(ui.ctx(), response.id) {
-                      state.cursor.set_char_range(Some(egui::text::CCursorRange::one(
-                        egui::text::CCursor::new(self.input.chars().count())
-                      )));
-                      egui::TextEdit::store_state(ui.ctx(), response.id, state);
-                    }
-                  }
-                }
-                else if self.input.chars().count() > 1 {
-                  let is_already_exact_command = commands.iter().any(|cmd| current_input.starts_with(*cmd));
-                  if !is_already_exact_command {
-                    if let Some(matched_command) = commands.iter().find(|cmd| cmd.starts_with(&current_input)) {
-                      self.input = matched_command.to_string();
-                      if let Some(mut state) = egui::TextEdit::load_state(ui.ctx(),response.id) {
+          });
+          let input_rect = egui::Rect::from_min_size(
+            egui::pos2(self.config.persona.dimensions.input_left,self.config.persona.dimensions.input_top),
+            egui::vec2(self.config.persona.dimensions.input_width,self.config.persona.dimensions.input_height),
+          );
+          let input_builder = egui::UiBuilder::new()
+            .max_rect(input_rect)
+            .layout(egui::Layout::top_down(egui::Align::LEFT));
+          ui.scope_builder(input_builder, |ui| {
+            if self.is_answering { ui.ctx().request_repaint(); }
+            ui.style_mut().visuals.weak_text_color = Some(egui::Color32::from_rgb(180,180,185));
+            let subtle_input_frame = egui::Frame::default()
+              .fill(egui::Color32::from_rgba_premultiplied(25,20,15,75))
+              .stroke(egui::Stroke::NONE)
+              .corner_radius(egui::CornerRadius::same(4)) 
+              .inner_margin(egui::Margin::symmetric(6,4)); 
+            let text_edit = egui::TextEdit::singleline(&mut self.input)
+              .frame(subtle_input_frame)
+              .margin(egui::Margin::ZERO)
+              .desired_width(self.config.persona.dimensions.input_width)
+              .text_color(egui::Color32::from_rgb(245,235,215)) 
+              .hint_text(format!("Ask {}...",self.config.persona.name))
+              .char_limit(200)
+              .lock_focus(true);
+            let response = ui.add(text_edit);
+            if self.is_first_frame && alpha == 255 {
+              response.request_focus();
+              self.is_first_frame = false;
+            }
+            if response.has_focus() {
+              let tab_pressed = ui.ctx().input(|i| i.key_pressed(egui::Key::Tab));
+              let up_pressed = ui.ctx().input(|i| i.key_pressed(egui::Key::ArrowUp));
+              let down_pressed = ui.ctx().input(|i| i.key_pressed(egui::Key::ArrowDown));
+              if tab_pressed {
+                ui.ctx().memory_mut(|mem| mem.request_focus(response.id));
+                let commands = vec![ "/clear","/reset","/persona ","/scene ","/chooser","/save ","/load ","/exit","/quit","/help"];
+                if self.input.starts_with('/') {
+                  let current_input = self.input.to_lowercase();
+                  if current_input.starts_with("/persona ") {
+                    let prefix = &self.input["/persona ".len()..];
+                    let prefix_lower = prefix.to_lowercase();
+                    let mut persona_names: Vec<String> = self.config.personas.keys().cloned().collect();
+                    persona_names.sort();
+                    let matches: Vec<&String> = persona_names.iter().filter(|name| name.to_lowercase().starts_with(&prefix_lower)).collect();
+                    if !matches.is_empty() {
+                      let current_index = matches.iter().position(|name| **name == prefix);
+                      let next_match = match current_index {
+                        Some(idx) => matches[(idx + 1) % matches.len()],
+                        None => matches[0],
+                      };
+                      self.input = format!("/persona {}", next_match);
+                      if let Some(mut state) = egui::TextEdit::load_state(ui.ctx(), response.id) {
                         state.cursor.set_char_range(Some(egui::text::CCursorRange::one(
                           egui::text::CCursor::new(self.input.chars().count())
                         )));
-                        egui::TextEdit::store_state(ui.ctx(),response.id,state);
+                        egui::TextEdit::store_state(ui.ctx(), response.id, state);
+                      }
+                    }
+                  }
+                  else if current_input.starts_with("/load ") {
+                    let argument = &self.input["/load ".len()..];
+                    if argument.trim().is_empty() {
+                      self.input = format!("/load {}", self.config.history_file);
+                      if let Some(mut state) = egui::TextEdit::load_state(ui.ctx(), response.id) {
+                        state.cursor.set_char_range(Some(egui::text::CCursorRange::one(
+                          egui::text::CCursor::new(self.input.chars().count())
+                        )));
+                        egui::TextEdit::store_state(ui.ctx(), response.id, state);
+                      }
+                    }
+                  }
+                  else if current_input.starts_with("/save ") {
+                    let argument = &self.input["/save ".len()..];
+                    if argument.trim().is_empty() {
+                      self.input = format!("/save {}", self.config.history_file);
+                      if let Some(mut state) = egui::TextEdit::load_state(ui.ctx(), response.id) {
+                        state.cursor.set_char_range(Some(egui::text::CCursorRange::one(
+                          egui::text::CCursor::new(self.input.chars().count())
+                        )));
+                        egui::TextEdit::store_state(ui.ctx(), response.id, state);
+                      }
+                    }
+                  }
+                  else if self.input.chars().count() > 1 {
+                    let is_already_exact_command = commands.iter().any(|cmd| current_input.starts_with(*cmd));
+                    if !is_already_exact_command {
+                      if let Some(matched_command) = commands.iter().find(|cmd| cmd.starts_with(&current_input)) {
+                        self.input = matched_command.to_string();
+                        if let Some(mut state) = egui::TextEdit::load_state(ui.ctx(),response.id) {
+                          state.cursor.set_char_range(Some(egui::text::CCursorRange::one(
+                            egui::text::CCursor::new(self.input.chars().count())
+                          )));
+                          egui::TextEdit::store_state(ui.ctx(),response.id,state);
+                        }
                       }
                     }
                   }
                 }
               }
-            }
-            if up_pressed {
-              if !self.histories.inputs().is_empty() && self.input_index > 0 {
-                self.input_index = self.input_index.saturating_sub(1);
-                self.input = self.histories.inputs()[self.input_index].clone();
-              }
-            } else if down_pressed {
-              if !self.histories.inputs().is_empty() {
-                self.input_index = self.input_index.saturating_add(1);
-                if self.input_index < self.histories.inputs().len() {
+              if up_pressed {
+                if !self.histories.inputs().is_empty() && self.input_index > 0 {
+                  self.input_index = self.input_index.saturating_sub(1);
                   self.input = self.histories.inputs()[self.input_index].clone();
-                } else {
-                  self.input_index = self.histories.inputs().len();
-                  self.input.clear();
+                }
+              } else if down_pressed {
+                if !self.histories.inputs().is_empty() {
+                  self.input_index = self.input_index.saturating_add(1);
+                  if self.input_index < self.histories.inputs().len() {
+                    self.input = self.histories.inputs()[self.input_index].clone();
+                  } else {
+                    self.input_index = self.histories.inputs().len();
+                    self.input.clear();
+                  }
                 }
               }
             }
-          }
-          if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-            let prompt = self.input.trim().to_string();
-            if !prompt.is_empty() {
-              self.histories.insert_input(&prompt.clone());
-              self.input_index = self.histories.inputs().len();
-              if prompt.starts_with('/') {
-                let parts: Vec<&str> = prompt.split_whitespace().collect();
-                let command = parts[0].to_lowercase();
-                match command.as_str() {
-                  "/clear" => {
-                    self.histories.clear();
-                    self.current_reply.clear();
-                    self.is_answering = false;
-                    self.scroll_to_bottom = false;
-                    self.input.clear();
-                  },
-                  "/reset" => {
-                    *self = Self::new(&self.config.clone());
-                    ui.ctx().forget_all_images();
-                  },
-                  "/persona" => {
-                    if parts.len() > 1 {
-                      let label: String = parts[1..].join(" ");
-                      if let Some (persona) = self.config.personas.get(&label) {
-                        self.config.persona = persona.clone();
-                        let (send, recv) = unbounded::<StreamEvent>();
-                        self.recv = recv;
-                        self.chat = Chat::new(&self.config,send);
-                        self.histories.switch(&self.config.persona.label);
-                        if !self.config.scene.is_empty() {
-                          self.chat.set_scene(&self.config.scene);
-                          self.histories.insert_line(&("Scene".to_string(),format!("{}",self.config.scene)));
-                        } else if !self.config.persona.scene.is_empty() {
-                          self.chat.set_scene(&self.config.persona.scene);
-                          self.histories.insert_line(&("Scene".to_string(),format!("{}",self.config.persona.scene)));
-                        }
-                        if self.histories.lines().is_empty() {
-                          self.greet();
-                          self.chat.load_history(self.histories.lines());
+            if ui.input(|i| i.key_pressed(egui::Key::Escape)) {
+              response.surrender_focus(); 
+              if self.view == ViewState::Chat {
+                self.view = ViewState::Chooser;
+              } else {
+                self.view = ViewState::Chat;
+              }
+            }
+            if self.is_first_frame && alpha == 255 {
+              response.request_focus();
+              self.is_first_frame = false;
+            }
+            if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+              let prompt = self.input.trim().to_string();
+              if !prompt.is_empty() {
+                self.histories.insert_input(&prompt.clone());
+                self.input_index = self.histories.inputs().len();
+                if prompt.starts_with('/') {
+                  let parts: Vec<&str> = prompt.split_whitespace().collect();
+                  let command = parts[0].to_lowercase();
+                  match command.as_str() {
+                    "/clear" => {
+                      self.histories.clear();
+                      self.current_reply.clear();
+                      self.is_answering = false;
+                      self.scroll_to_bottom = false;
+                      self.input.clear();
+                    },
+                    "/reset" => {
+                      *self = Self::new(&self.config.clone());
+                      ui.ctx().forget_all_images();
+                    },
+                    "/persona" => {
+                      if parts.len() > 1 {
+                        let label: String = parts[1..].join(" ");
+                        if let Some (persona) = self.config.personas.get(&label) {
+                          self.config.persona = persona.clone();
+                          let (send, recv) = unbounded::<StreamEvent>();
+                          self.recv = recv;
+                          self.chat = Chat::new(&self.config,send);
+                          self.histories.switch(&self.config.persona.label);
+                          if !self.config.scene.is_empty() {
+                            self.chat.set_scene(&self.config.scene);
+                            self.histories.insert_line(&("Scene".to_string(),format!("{}",self.config.scene)));
+                          } else if !self.config.persona.scene.is_empty() {
+                            self.chat.set_scene(&self.config.persona.scene);
+                            self.histories.insert_line(&("Scene".to_string(),format!("{}",self.config.persona.scene)));
+                          }
+                          if self.histories.lines().is_empty() {
+                            self.greet();
+                            self.chat.load_history(self.histories.lines());
+                          } else {
+                            self.chat.load_history(self.histories.lines());
+                            self.histories.insert_line(&("System".to_string(),format!("You have returned to talking to {}.",self.config.persona.name)));
+                            self.chat.has_returned();
+                          }
+                          self.current_reply.clear();
+                          self.is_answering = false;
+                          self.scroll_to_bottom = false;
+                          self.input.clear();
+                          ui.ctx().forget_all_images();
                         } else {
-                          self.chat.load_history(self.histories.lines());
-                          self.histories.insert_line(&("System".to_string(),format!("You have returned to talking to {}.",self.config.persona.name)));
-                          self.chat.has_returned();
+                          self.histories.insert_line(&("System".to_string(),format!("Please provide a valid persona: {}",self.config.personas.keys().cloned().collect::<Vec<String>>().join(","))));
                         }
-                        self.current_reply.clear();
-                        self.is_answering = false;
-                        self.scroll_to_bottom = false;
-                        self.input.clear();
-                        ui.ctx().forget_all_images();
                       } else {
                         self.histories.insert_line(&("System".to_string(),format!("Please provide a valid persona: {}",self.config.personas.keys().cloned().collect::<Vec<String>>().join(","))));
                       }
-                    } else {
-                      self.histories.insert_line(&("System".to_string(),format!("Please provide a valid persona: {}",self.config.personas.keys().cloned().collect::<Vec<String>>().join(","))));
-                    }
-                  },
-                  "/scene" => {
-                    if parts.len() > 1 {
-                      let scene: String = parts[1..].join(" ");
-                      self.chat.set_scene(&scene);
-                      self.histories.insert_line(&("Scene".to_string(),format!("{}",scene)));
+                    },
+                    "/scene" => {
+                      if parts.len() > 1 {
+                        let scene: String = parts[1..].join(" ");
+                        self.chat.set_scene(&scene);
+                        self.histories.insert_line(&("Scene".to_string(),format!("{}",scene)));
+                        self.input.clear();
+                      } else {
+                        self.histories.insert_line(&("System".to_string(),format!("Please provide a scene.")));
+                      }
+                    },
+                    "/chooser" => {
                       self.input.clear();
-                    } else {
-                      self.histories.insert_line(&("System".to_string(),format!("Please provide a scene.")));
-                    }
-                  },
-                  "/save" => {
-                    let filename: String = if parts.len() > 1 { parts[1..].join(" ") } else { self.config.history_file.clone() };
-                    let msg = match self.chat.save_history(&filename.to_string(),&self.histories.lines()) {
-                      Ok(_) => format!("History successfully saved to {}.", filename),
-                      Err(err) => format!("Save error: {}",err)
-                    };
-                    self.histories.insert_line(&("System".to_string(),msg.clone()));
-                    self.scroll_to_bottom = true;
-                    self.input.clear();
-                  },
-                  "/load" => {
-                    let filename: String = if parts.len() > 1 { parts[1..].join(" ") } else { self.config.history_file.clone() };
-                    let msg = match self.chat.load_history_file(&filename.to_string()) {
-                      Ok(loaded_data) => {
-                        self.histories.load(&loaded_data);
-                        format!("History loaded from {} successfully.", filename)
-                      },
-                      Err(e) => format!("Load error: {}", e)
-                    };
-                    self.histories.insert_line(&("System".to_string(),msg.clone()));
-                    self.scroll_to_bottom = true;
-                    self.input.clear();
-                  },
-                  "/exit"|"/quit" => ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close),
-                  "/help" => {
-                     let help_text = vec![
-                       "Available Commands:",
-                       "",
-                       "/help  - Display this utility command list.",
-                       "/clear  - Clear the dispayed chat logs completely.",
-                       "/reset  - Resets the current persona.",
-                       format!("/persona [persona]  - Switches the active persona, 'persona' must be one of {}.",self.config.personas.keys().cloned().collect::<Vec<String>>().join(",")).as_str(),
-                       "/scene  - Sets the scene for the conversation, argument should be a single sentence.",
-                       "/exit  - Safely close and exit the application.",
-                       "/quit  - Also safely closes and exits the application.",
-                       "/save [filename]  - Save session to a file (or configuration default).",
-                       "/load [filename]  - Restore session and model context from a file.",
-                       "",
-                     ].join("\n");
-                     self.histories.insert_line(&("System".to_string(),help_text.clone()));
-                     self.scroll_to_bottom = true;
-                     self.input.clear();
-                  },
-                  _ => {
-                    self.histories.insert_line(&("System".to_string(),format!("Unknown command: '{}'. Type /help for available commands.", command)));
-                    self.scroll_to_bottom = true;
-                    self.input.clear();
-                  },
+                      self.view = ViewState::Chooser;
+                    },
+                    "/save" => {
+                      let filename: String = if parts.len() > 1 { parts[1..].join(" ") } else { self.config.history_file.clone() };
+                      let msg = match self.chat.save_history(&filename.to_string(),&self.histories.lines()) {
+                        Ok(_) => format!("History successfully saved to {}.", filename),
+                        Err(err) => format!("Save error: {}",err)
+                      };
+                      self.histories.insert_line(&("System".to_string(),msg.clone()));
+                      self.scroll_to_bottom = true;
+                      self.input.clear();
+                    },
+                    "/load" => {
+                      let filename: String = if parts.len() > 1 { parts[1..].join(" ") } else { self.config.history_file.clone() };
+                      let msg = match self.chat.load_history_file(&filename.to_string()) {
+                        Ok(loaded_data) => {
+                          self.histories.load(&loaded_data);
+                          format!("History loaded from {} successfully.", filename)
+                        },
+                        Err(e) => format!("Load error: {}", e)
+                      };
+                      self.histories.insert_line(&("System".to_string(),msg.clone()));
+                      self.scroll_to_bottom = true;
+                      self.input.clear();
+                    },
+                    "/exit"|"/quit" => ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close),
+                    "/help" => {
+                       let help_text = vec![
+                         "Available Commands:",
+                         "",
+                         "/help  - Display this utility command list.",
+                         "/clear  - Clear the dispayed chat logs completely.",
+                         "/reset  - Resets the current persona.",
+                         format!("/persona [persona]  - Switches the active persona, 'persona' must be one of {}.",self.config.personas.keys().cloned().collect::<Vec<String>>().join(",")).as_str(),
+                         "/scene  - Sets the scene for the conversation, argument should be a single sentence.",
+                         "/exit  - Safely close and exit the application.",
+                         "/quit  - Also safely closes and exits the application.",
+                         "/save [filename]  - Save session to a file (or configuration default).",
+                         "/load [filename]  - Restore session and model context from a file.",
+                         "",
+                       ].join("\n");
+                       self.histories.insert_line(&("System".to_string(),help_text.clone()));
+                       self.scroll_to_bottom = true;
+                       self.input.clear();
+                    },
+                    _ => {
+                      self.histories.insert_line(&("System".to_string(),format!("Unknown command: '{}'. Type /help for available commands.", command)));
+                      self.scroll_to_bottom = true;
+                      self.input.clear();
+                    },
+                  }
+                } else if prompt.eq_ignore_ascii_case("exit") || prompt.eq_ignore_ascii_case("quit") {
+                  ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close); 
+                } else {
+                  self.histories.insert_line(&("You".to_string(), prompt.clone()));
+                  self.scroll_to_bottom = true;
+                  self.is_answering = true;
+                  if let Err(e) = self.chat.chat(&prompt) {
+                    log::error!("Failed to launch GUI chat pipeline thread: {}", e);
+                    self.is_answering = false;
+                  }
+                  self.input.clear();
                 }
-              } else if prompt.eq_ignore_ascii_case("exit") || prompt.eq_ignore_ascii_case("quit") {
-                ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close); 
-              } else {
-                self.histories.insert_line(&("You".to_string(), prompt.clone()));
-                self.scroll_to_bottom = true;
-                self.is_answering = true;
-                if let Err(e) = self.chat.chat(&prompt) {
-                  log::error!("Failed to launch GUI chat pipeline thread: {}", e);
-                  self.is_answering = false;
-                }
-                self.input.clear();
               }
-            }
             response.request_focus(); 
           }
         });

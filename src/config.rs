@@ -6,6 +6,7 @@ use std::str::FromStr;
 use std::collections::HashMap;
 
 use crate::defaults::*;
+use crate::location::*;
 use crate::mode::*;
 use crate::persona::*;
 use crate::util;
@@ -17,6 +18,7 @@ pub(crate) struct Config {
   pub(crate) scene:          String,
   pub(crate) persona:        Persona,
   pub(crate) personas:       HashMap<String,Persona>,
+  pub(crate) locations:      HashMap<String,Location>,
   pub(crate) llm_server_url: String,
   pub(crate) model:          String,
   pub(crate) persona_file:   String,
@@ -36,6 +38,16 @@ impl fmt::Display for Config {
         "N/A"
       }
     };
+    let personas = {
+      let mut personas = self.personas.values().map(|persona| persona.name.clone()).collect::<Vec<String>>();
+      personas.sort();
+      personas.join(", ")
+    };
+    let locations = {
+      let mut locations = self.locations.values().map(|location| location.display.clone()).collect::<Vec<String>>();
+      locations.sort();
+      locations.join(", ")
+    };
     write!(f,
 "
   -----------------------------------
@@ -50,6 +62,14 @@ impl fmt::Display for Config {
     Persona File:   {}
     History File:   {}
 
+    Known Personas:
+
+{}
+
+    Known Locations:
+
+{}
+
   -----------------------------------
 ",
       self.mode,
@@ -59,6 +79,8 @@ impl fmt::Display for Config {
       self.model,
       if self.persona_file.is_empty() { "None".to_string() } else { self.persona_file.clone() },
       history,
+      personas,
+      locations,
     )
   }
 }
@@ -71,6 +93,7 @@ impl Config {
       scene:          String::new(),
       persona:        Persona::new(DEFAULT_PERSONA),
       personas:       Persona::gather(),
+      locations:      Location::defaults(),
       llm_server_url: DEFAULT_LLM_SERVER_URL.to_string(),
       model:          DEFAULT_MODEL.to_string(),
       persona_file:   String::new(),

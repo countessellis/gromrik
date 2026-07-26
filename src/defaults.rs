@@ -104,13 +104,16 @@ pub(crate) const DEFAULT_PERSONA: &str = {
   }
 };
 #[cfg(all(feature = "gromrik", feature = "lyranis"))]
-pub(crate) const PERSONA_LIST: &str = "gromrik, lyranis, commoner";
+pub(crate) const PERSONA_LIST:  &str = "gromrik, lyranis, commoner";
 #[cfg(all(feature = "gromrik", not(feature = "lyranis")))]
-pub(crate) const PERSONA_LIST: &str = "gromrik, commoner";
+pub(crate) const PERSONA_LIST:  &str = "gromrik, commoner";
 #[cfg(all(feature = "lyranis", not(feature = "gromrik")))]
-pub(crate) const PERSONA_LIST: &str = "lyranis, commoner";
+pub(crate) const PERSONA_LIST:  &str = "lyranis, commoner";
 #[cfg(not(any(feature = "gromrik", feature = "lyranis")))]
-pub(crate) const PERSONA_LIST: &str = "commoner";
+pub(crate) const PERSONA_LIST:  &str = "commoner";
+pub(crate) const LOCATION_LIST: &[&str] = &[
+  "inn::The Inn::You are at the village tavern drinking beer when a patron sits down across from you and started talking.",
+];
 
 // Gromrik Persona Constants:
 
