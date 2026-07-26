@@ -1,0 +1,10 @@
+[
+  "inn::The Inn::You are at the village tavern drinking when a fellow patron sits down across from you and starts talking to you.",
+  "rock::A rock on the outskirts::You are sitting on a rock in the village outskirts waiting for a customer when a prospective mark approaches and starts talking to you.",
+  "chapel::The Chapel::You are at the village chapel waiting when a prospective mark walks in and starts talking to you.",
+  "magicshop::The Magic Shop::You are at the village's magic shop looking at trinkets when a prospective mark approaches you and starts talking to you.",
+  "library::The Library::You are in the library hiding some items behind the books when a prospective mark enters and starts talking to you.",
+  "path::A path in the Village::You are strolling along a path in the village at night when a prospective mark stops you and starts talking to you.",
+  "market::A stall in the Market::You are working your stall in the village marketplace when a customer approaches and starts talking.",
+  "river::Down by the River::You are down by the river looking for trinkets when a prospective mark approaches and starts talking to you."
+]

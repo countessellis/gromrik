@@ -2,6 +2,7 @@
   "label": "gromrik",
   "name": "Gromrik",
   "scene": "You are at the village tavern drinking beer when a patron sits down across from you and started talking.",
+  "location": "inn",
   "greeting": "Bah! Why are you bothering me?",
   "dismissal": "Go away!",
   "emoji": "😤⛏️"

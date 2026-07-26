@@ -6,6 +6,7 @@ use zstd::stream::read::Decoder;
 use std::collections::HashMap;
 
 use crate::defaults::*;
+use crate::location::*;
 
 ///////////// Persona
 
@@ -15,6 +16,10 @@ pub(crate) struct Persona {
   pub(crate) name:       String,
   pub(crate) prompt:     String,
   pub(crate) scene:      String,
+  #[cfg(any(feature = "tui", feature = "gui",feature = "web"))]
+  pub(crate) location:   String,
+  #[cfg(any(feature = "tui", feature = "gui",feature = "web"))]
+  pub(crate) locations:  HashMap<String,Location>,
   pub(crate) greeting:   String,
   pub(crate) dismissal:  String,
   pub(crate) emoji:      String,
@@ -44,6 +49,7 @@ struct PersonaMetadata {
   label:     String,
   name:      String,
   scene:     String,
+  location:  String,
   greeting:  String,
   dismissal: String,
   emoji:     String,
@@ -80,6 +86,10 @@ impl Persona {
       label:      "commoner".to_string(),
       name:       "Commoner".to_string(),
       scene:      String::new(),
+      #[cfg(any(feature = "tui", feature = "gui",feature = "web"))]
+      location:   COMMONER_LOCATION.to_string(),
+      #[cfg(any(feature = "tui", feature = "gui",feature = "web"))]
+      locations:  Location::defaults(),
       prompt:     COMMONER_SYSTEM_PROMPT.to_string(),
       greeting:   COMMONER_GREETING.to_string(),
       dismissal:  COMMONER_DISMISSAL.to_string(),
@@ -108,6 +118,10 @@ impl Persona {
       label:      "gromrik".to_string(),
       name:       "Gromrik".to_string(),
       scene:      GROMRIK_SCENE.to_string(),
+      #[cfg(any(feature = "tui", feature = "gui",feature = "web"))]
+      location:   GROMRIK_LOCATION.to_string(),
+      #[cfg(any(feature = "tui", feature = "gui",feature = "web"))]
+      locations:  Location::defaults(),
       prompt:     GROMRIK_PROMPT.to_string(),
       greeting:   GROMRIK_GREETING.to_string(),
       dismissal:  GROMRIK_DISMISSAL.to_string(),
@@ -136,6 +150,10 @@ impl Persona {
       label:      "lyranis".to_string(),
       name:       "Lyranis".to_string(),
       scene:      LYRANIS_SCENE.to_string(),
+      #[cfg(any(feature = "tui", feature = "gui",feature = "web"))]
+      location:   LYRANIS_LOCATION.to_string(),
+      #[cfg(any(feature = "tui", feature = "gui",feature = "web"))]
+      locations:  Location::defaults(),
       prompt:     LYRANIS_PROMPT.to_string(),
       greeting:   LYRANIS_GREETING.to_string(),
       dismissal:  LYRANIS_DISMISSAL.to_string(),
@@ -187,6 +205,8 @@ impl Persona {
     let mut full_image: Vec<u8> = Vec::new();
     #[cfg(feature = "gui")]
     let mut layout_json = Vec::new();
+    #[cfg(any(feature = "tui", feature = "gui",feature = "web"))]
+    let mut locations_json = Vec::new();
     let entries = match archive.entries() {
       Ok(entries) => entries,
       Err(err) => {
@@ -199,40 +219,52 @@ impl Persona {
       let path = entry.path().ok()?;
       let filename = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
       match filename {
-        "metadata.json"   => { entry.read_to_end(&mut metadata_json).unwrap(); }
-        "prompt.tpl"      => { entry.read_to_string(&mut prompt).unwrap(); }
-        "text_image.txt"  => { entry.read_to_string(&mut text_image).unwrap(); }
+        "metadata.json"   => { entry.read_to_end(&mut metadata_json).unwrap(); },
+        "prompt.tpl"      => { entry.read_to_string(&mut prompt).unwrap(); },
+        "text_image.txt"  => { entry.read_to_string(&mut text_image).unwrap(); },
         "full_image.png"  => { 
           #[cfg(any(feature = "gui", feature = "web"))]
           entry.read_to_end(&mut full_image).unwrap(); 
-        }
+        },
         "dimensions.json" => {
           #[cfg(feature = "gui")]
           entry.read_to_end(&mut layout_json).unwrap();
-        }
-        _ => {}
+        },
+        "locations.json"  => {
+          #[cfg(any(feature = "tui", feature = "gui",feature = "web"))]
+          entry.read_to_end(&mut locations_json).unwrap();
+        },
+        _ => {},
       }
     }
     if metadata_json.is_empty() { log::warn!("The metadata.json in bundle was empty or not found!"); }
     #[cfg(feature = "gui")]
     if layout_json.is_empty() { log::warn!("The dimensions.json in bundle was empty or not found!"); }
+    #[cfg(any(feature = "tui", feature = "gui",feature = "web"))]
+    if locations_json.is_empty() { log::warn!("The locations.json in bundle was empty or not found!"); }
     let meta: PersonaMetadata = serde_json::from_slice(&metadata_json).ok()?;
     #[cfg(feature = "gui")]
     let dimensions: ChatDimensions = serde_json::from_slice(&layout_json).ok()?;
+    #[cfg(any(feature = "tui", feature = "gui",feature = "web"))]
+    let locations: Vec<&str> = serde_json::from_slice::<Vec<&str>>(&locations_json).unwrap_or_else(|_| Vec::new());
     Some(Self {
-      label: meta.label,
-      name: meta.name,
-      scene: meta.scene,
-      greeting: meta.greeting,
-      dismissal: meta.dismissal,
-      emoji: meta.emoji,
-      prompt,
+      label:      meta.label,
+      name:       meta.name,
+      scene:      meta.scene,
+      #[cfg(any(feature = "tui", feature = "gui",feature = "web"))]
+      location:   meta.location,
+      #[cfg(any(feature = "tui", feature = "gui",feature = "web"))]
+      locations:  Location::explore(Some(&Location::defaults()),&locations),
+      greeting:   meta.greeting,
+      dismissal:  meta.dismissal,
+      emoji:      meta.emoji,
+      prompt:     prompt,
       #[cfg(feature = "gui")]
-      dimensions,
+      dimensions: dimensions,
       #[cfg(feature = "tui")]
-      text_image,
+      text_image: text_image,
       #[cfg(any(feature = "gui", feature = "web"))]
-      full_image,
+      full_image: full_image,
     })
   }
 }

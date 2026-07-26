@@ -1,0 +1,10 @@
+[
+  "inn::The Inn::You are at the village tavern drinking beer when a patron sits down across from you and starts talking to you.",
+  "rock::A rock on the outskirts::You are sitting on a rock in the village outskirts to get away from people when a traveler approaches and starts talking to you.",
+  "chapel::The Chapel::You are at the village chapel to get away from people when a seeker walks in and starts talking to you.",
+  "magicshop::The Magic Shop::You are at the village's magic shop getting your hammer engraved when a curious seeker approaches you and starts talking to you.",
+  "library::The Library::You are in the library getting out of the sun when a seeker enters and starts talking to you.",
+  "path::A path in the Village::You are walking along a path in the village at night when a traveler stops you and starts talking to you.",
+  "market::A stall in the Market::You are shopping at a stall at the village marketplace when another customer approaches and starts talking to you.",
+  "river::Down by the River::You are down by the river fishing when a traveler approaches and starts talking to you."
+]

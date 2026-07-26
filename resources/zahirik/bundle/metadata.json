@@ -2,6 +2,7 @@
   "label": "zahirik",
   "name": "Zahirik",
   "scene": "You are working your stall in the village marketplace when a customer approaches and starts talking.",
+  "location": "market",
   "greeting": "You carry the dust of long roads, traveler. Sit, rest your feet, and let Ol' Zahirik show you things unseen in any high-born city!",
   "dismissal": "May the sands protect you, stubborn friend! Go, compare my prices to the fools in the square. You will return!",
   "emoji": "🐸🏺"

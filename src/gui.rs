@@ -37,7 +37,8 @@ pub(crate) enum ViewState {
 impl GUI {
   pub(crate) fn new(config: &Config) -> GUI {
     let mut config: Config = config.clone();
-    let persona: String = config.persona.label.clone();
+    let persona:  String = config.persona.label.clone();
+    let location: String = config.persona.location.clone();
     let (send, recv) = unbounded::<StreamEvent>();
     let initial_greeting = (config.persona.name.clone(),config.persona.greeting.clone());
     let mut chat: Chat = Chat::new(&config,send);
@@ -66,7 +67,7 @@ impl GUI {
       input:            String::new(),
       view:             ViewState::Chat,
       chooser_persona:  persona,
-      chooser_location: String::new(),
+      chooser_location: location,
     }
   }
 
@@ -175,12 +176,11 @@ impl eframe::App for GUI {
                 ui.vertical(|ui| {
                   ui.colored_label(theme_color, "📍 Locations");
                   ui.add_space(4.0);
-                  let mut locations: Vec<String> = self.config.locations.keys().cloned().collect();
+                  let mut locations: Vec<String> = self.config.persona.locations.keys().cloned().collect();
                   locations.sort();
                   for label in &locations {
-                    if let Some(location) = self.config.locations.get(label) {
+                    if let Some(location) = self.config.persona.locations.get(label) {
                       let is_selected = self.chooser_location == location.label;
-                      log::debug!("Chooser Location: {}, Checked Location: {}, Selected: {}",self.chooser_location,location.label,is_selected);
                       let text_color = if is_selected { egui::Color32::from_rgb(20, 18, 16) } else { egui::Color32::from_rgb(245, 235, 215) };
                       let rich_text = egui::RichText::new(&location.display).color(text_color);
                       if ui.selectable_label(is_selected,rich_text).clicked() {

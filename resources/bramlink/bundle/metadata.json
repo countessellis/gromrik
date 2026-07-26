@@ -2,6 +2,7 @@
   "label": "bramlink",
   "name": "Bramlink Brightheart",
   "scene": "You are at the village chapel praying, when a traveler walked in and started talking to you.",
+  "location": "chapel",
   "greeting": "Ah, dear heart, tell me what is on your mind.",
   "dismissal": "Peace be unto you, my friend.",
   "emoji": "🧔🛡️"

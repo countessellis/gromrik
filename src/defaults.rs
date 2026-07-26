@@ -113,6 +113,12 @@ pub(crate) const PERSONA_LIST:  &str = "lyranis, commoner";
 pub(crate) const PERSONA_LIST:  &str = "commoner";
 pub(crate) const LOCATION_LIST: &[&str] = &[
   "inn::The Inn::You are at the village tavern drinking beer when a patron sits down across from you and started talking.",
+  "rock::A rock on the outskirts::You are sitting on a rock in the village outskirts, when a traveler approaches and starts talking to you to you.",
+  "chapel::The Chapel::You are at the village chapel praying, when a traveler walked in and started talking to you to you.",
+  "magicshop::The Magic Shop::You are at the village's magic shop looking at potions when a curious seeker approaches and starts talking to you.",
+  "library::The Library::You are in the library when a seeker enters and starts talking to you.",
+  "path::A path in the Village::You are walking along a path in the village at night when a traveler stops you and starts talking to you.",
+  "market::A stall in the Market::You are at a stall in the village marketplace when a customer approaches and starts talking to you.",
 ];
 
 // Gromrik Persona Constants:
@@ -125,6 +131,8 @@ pub(crate) const GROMRIK_DISMISSAL: &str = "Go away!";
 pub(crate) const GROMRIK_EMOJI:     &str = "\u{1F624}\u{26Cf}\u{FE0F}";
 #[cfg(feature = "gromrik")]
 pub(crate) const GROMRIK_SCENE:     &str = "You are at the village tavern drinking beer when a patron sits down across from you and started talking.";
+#[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
+pub(crate) const GROMRIK_LOCATION:  &str    = "inn";
 
 // Lyranis Persona Constants:
 
@@ -136,12 +144,16 @@ pub(crate) const LYRANIS_DISMISSAL: &str = "Now what was I contemplating again..
 pub(crate) const LYRANIS_EMOJI:     &str = "\u{1F9DD}\u{1F52E}";
 #[cfg(feature = "lyranis")]
 pub(crate) const LYRANIS_SCENE:     &str = "You are at the village's magic shop looking at potions when a curious seeker approaches you and starts talking.";
+#[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
+pub(crate) const LYRANIS_LOCATION:  &str    = "magicshop";
 
 // Commoner Persona Constants:
 pub(crate) const COMMONER_TRAITS:        &[&str] = &["rustic", "weathered", "cheerful", "anxious", "rebellious", "humble", "curious", "shrewd"];
 pub(crate) const COMMONER_GREETING:      &str    = "Hello.";
-pub(crate) const COMMONER_DISMISSAL:      &str    = "What did you say, I missed that.";
+pub(crate) const COMMONER_DISMISSAL:     &str    = "What did you say, I missed that.";
 pub(crate) const COMMONER_EMOJI:         &str    = "\u{1F9D1}";
+#[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
+pub(crate) const COMMONER_LOCATION:      &str    = "inn";
 #[cfg(any(feature = "gui",feature = "web"))]
 pub(crate) const COMMONER_FULL_IMAGE:    &[u8]   = &[ 137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 10, 73, 68, 65, 84, 8, 29, 99, 0, 1, 0, 0, 5, 0, 1, 138, 109, 188, 32, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130 ];
 #[cfg(feature = "tui")]

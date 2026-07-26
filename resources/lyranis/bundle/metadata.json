@@ -2,6 +2,7 @@
   "label": "lyranis",
   "name": "Lyranis",
   "scene": "You are at the village's magic shop looking at potions when a curious seeker approaches you and starts talking.",
+  "location": "magicshop",
   "greeting": "I wonder... Oh! Fine greetings, stranger. Do you want something?",
   "dismissal": "Now what was I contemplating again...?",
   "emoji": "🧝🔮"

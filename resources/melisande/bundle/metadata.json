@@ -2,6 +2,7 @@
   "label": "melisande",
   "name": "Melisande",
   "scene": "You are at the village tavern where you have been performing when an admirer comes up and talks to you.",
+  "location": "inn",
   "greeting": "Dance a step, share a laugh, or ask a question! Just don't ask me where I wandered last night, and we shall get along famously.",
   "dismissal": "Walk swiftly and keep to the high road. The briars have eyes this time of year, and they talk even more than I do.",
   "emoji": "💃🪕"

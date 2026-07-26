@@ -1,0 +1,10 @@
+[
+  "inn::The Inn::You are at the village tavern drinking mead when a patron sits down across from you and starts talking to you.",
+  "rock::A rock on the outskirts::You are sitting on a rock in the village outskirts contemplating the distant northern ice when a seeker approaches and starts talking to you.",
+  "chapel::The Chapel::You are at the village chapel meditating on the northern winds when a seeker walks in and starts talking to you.",
+  "magicshop::The Magic Shop::You are at the village's magic shop looking for new scrolls engraved when a seeker approaches you and starts talking to you.",
+  "library::The Library::You are in the library you run when a seeker enters and starts talking.",
+  "path::A path in the Village::You are walking along a path in the village at night when a seeker stops you and starts talking to you.",
+  "market::A stall in the Market::You are shopping at a stall at the village marketplace when a seeker approaches and starts talking to you.",
+  "river::Down by the River::You are down by the river fishing when a seeker approaches and starts talking to you."
+]

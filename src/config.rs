@@ -6,7 +6,6 @@ use std::str::FromStr;
 use std::collections::HashMap;
 
 use crate::defaults::*;
-use crate::location::*;
 use crate::mode::*;
 use crate::persona::*;
 use crate::util;
@@ -18,7 +17,6 @@ pub(crate) struct Config {
   pub(crate) scene:          String,
   pub(crate) persona:        Persona,
   pub(crate) personas:       HashMap<String,Persona>,
-  pub(crate) locations:      HashMap<String,Location>,
   pub(crate) llm_server_url: String,
   pub(crate) model:          String,
   pub(crate) persona_file:   String,
@@ -44,7 +42,7 @@ impl fmt::Display for Config {
       personas.join(", ")
     };
     let locations = {
-      let mut locations = self.locations.values().map(|location| location.display.clone()).collect::<Vec<String>>();
+      let mut locations = self.persona.locations.values().map(|location| location.display.clone()).collect::<Vec<String>>();
       locations.sort();
       locations.join(", ")
     };
@@ -93,7 +91,6 @@ impl Config {
       scene:          String::new(),
       persona:        Persona::new(DEFAULT_PERSONA),
       personas:       Persona::gather(),
-      locations:      Location::defaults(),
       llm_server_url: DEFAULT_LLM_SERVER_URL.to_string(),
       model:          DEFAULT_MODEL.to_string(),
       persona_file:   String::new(),
