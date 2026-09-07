@@ -4,10 +4,9 @@ license = "MIT"
 authors = ["Bethany Davis <ellis@despoena.com>"]
 description = "A Displeased Dwarf Chat Bot"
 repository = "https://github.com/countessellis/gromrik"
-homepage = "https://github.com/countessellis/gromrik"
-readme = "README.md"
 version = "1.1.4"
 edition = "2024"
+publish = false
 default-run = "ghosts"
 
 [features]
@@ -85,32 +84,28 @@ name = "gromrik"
 path = "src/lib.rs"
 
 [dependencies]
-ansi_term = "0.12"
-chrono = "0.4"
+nu-ansi-term = "0.50"
 crossbeam-channel = "0.5"
-dirs = "6.0"
-eframe = "0.35"
-egui_extras = { version = "0.35", features = ["all_loaders"] }
+eframe = "0.36"
+egui_extras = { version = "0.36", features = ["all_loaders"] }
 env_logger = "0.11"
 image = { version = "0.25", features = ["png"] }
-imagesize = "0.14.0"
 log = "0.4"
 mimalloc = { version = "0.1", default-features = false }
 ratatui = "0.30"
 regex = "1.12"
-reqwest = "0.13"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-tar = "0.4.46"
+tar = "0.4"
 ureq = { version = "3.3", features = ["json"] }
 url = "2.5"
-winit = "0.30.13"
-zstd = "0.13.3"
+winit = "0.30"
+zstd = "0.14"
 
 [build-dependencies]
 chrono = "0.4"
-tar = "0.4.46"
-zstd = "0.13.3"
+tar = "0.4"
+zstd = "0.14"
 
 [profile.dev]
 opt-level = 1

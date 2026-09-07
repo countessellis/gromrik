@@ -1,4 +1,4 @@
-use ansi_term::Colour;
+pub type Colour = nu_ansi_term::Color;
 
 use crate::defaults::*;
 
@@ -18,5 +18,5 @@ pub(crate) fn raw_splash() -> String {
 
 pub(crate) fn splash() -> String {
   let splash: String =  raw_splash();
-  format!("\n{}\n",Colour::RGB(130, 108, 72).bold().paint(splash))
+  format!("\n{}\n",Colour::Rgb(130, 108, 72).bold().paint(splash))
 }
