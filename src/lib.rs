@@ -11,6 +11,7 @@ pub mod logger;
 
 pub(crate) mod chat;
 pub(crate) mod cli;
+pub(crate) mod collections;
 pub(crate) mod config;
 pub(crate) mod defaults;
 pub(crate) mod gui;
@@ -23,4 +24,5 @@ pub(crate) mod splash;
 pub(crate) mod tui;
 pub(crate) mod ui;
 pub(crate) mod util;
+pub(crate) mod version;
 pub(crate) mod web;

@@ -3,6 +3,7 @@ use std::io::Write;
 use crate::ui::*;
 use crate::config::*;
 use crate::splash::*;
+use crate::version::*;
 
 ///////////// Run
 

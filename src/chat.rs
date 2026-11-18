@@ -13,10 +13,14 @@ pub use std::io::Write;
 #[cfg(any(feature = "tui", feature = "gui", feature = "web"))]
 pub use std::path::Path;
 
+use crate::util;
+
+use crate::collections::Fields;
+
 use crate::config::*;
 use crate::defaults::*;
 
-use crate::util;
+///////////// Chat
 
 #[derive(Clone)]
 pub(crate) struct Chat {
@@ -68,8 +72,6 @@ pub(crate) enum StreamEvent {
   Finished,
 }
 
-
-
 impl Chat {
   pub(crate) fn new(config: &Config, send: Sender<StreamEvent>) -> Chat {
     let agent_config = ureq::config::Config::builder().http_status_as_error(false).timeout_connect(Some(Duration::from_secs(10))).timeout_global(Some(Duration::from_secs(2700))).build();
@@ -79,7 +81,7 @@ impl Chat {
       agent:   agent.clone(),
       system:  Message {
         role:    "system".into(),
-        content: util::render(&config.persona.prompt,&HashMap::new()),
+        content: util::render(&config.persona.prompt,&Fields::new(&HashMap::new())),
       },
       scene:   String::new(),
       history: Vec::new(),
@@ -93,9 +95,9 @@ impl Chat {
         .unwrap_or_default()
         .as_secs() as usize % COMMONER_TRAITS.len();
       let random_trait = COMMONER_TRAITS[time_index];
-      let fields: HashMap<&str,String> = HashMap::from([
+      let fields: Fields = Fields::new(&HashMap::from([
         ("TRAIT",random_trait.to_string()),
-      ]);
+      ]));
       let (send, recv) = unbounded::<StreamEvent>();
       let config_clone = config.clone();
       let agent_clone  = agent.clone();
@@ -119,10 +121,10 @@ impl Chat {
         let bio:  String = bio_part.replace("BACKSTORY:", "").trim().to_string();
         log::info!("Commoner Name: {}",name);
         log::info!("Commoner Backstory: {}",bio);
-        let fields: HashMap<&str,String> = HashMap::from([
+        let fields: Fields = Fields::new(&HashMap::from([
           ("NAME",name.clone()),
           ("BACKSTORY",bio.clone()),
-        ]);
+        ]));
         chat.config.persona.name = name.clone();
         chat.system = Message {
           role:    "system".to_string(),
