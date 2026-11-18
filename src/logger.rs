@@ -11,13 +11,14 @@ use std::path::PathBuf;
 use std::fs::OpenOptions;
 
 use crate::defaults::*;
+use crate::splash::*;
 
 ///////////// Logger
 
 #[allow(dead_code)]
 pub(crate) enum LogTarget {
   Stdout,
-  File(&'static str,&'static str), 
+  File(&'static str,&'static str),
 }
 
 impl LogTarget {
@@ -33,7 +34,19 @@ impl LogTarget {
         }
         let mut path = PathBuf::from(dir);
         path.push(filename);
-        match OpenOptions::new().create(true).append(true).open(&path) {
+        let file = match OpenOptions::new().create_new(true).write(true).open(&path) {
+          Ok(mut new_file) => {
+            if let Err(err) = writeln!(new_file,"{}",raw_splash()) {
+              eprintln!("Warning: Failed to write header to '{:?}' ({}).", path, err);
+            }
+            Ok(new_file)
+          }
+          Err(err) if err.kind() == std::io::ErrorKind::AlreadyExists => {
+            OpenOptions::new().append(true).open(&path)
+          }
+          Err(err) => Err(err),
+        };
+        match file {
           Ok(file) => env_logger::fmt::Target::Pipe(Box::new(file)),
           Err(err) => {
             eprintln!("Warning: Failed to open log file '{:?}' ({}). Falling back to Stdout.", path, err);
@@ -57,6 +70,7 @@ pub fn init() {
       }
     }
   }
+
   let filter_regex = if !redact_patterns.is_empty() {
     let unified_pattern = redact_patterns.join("|");
     Regex::new(&format!("({})", unified_pattern)).ok()
@@ -72,18 +86,9 @@ pub fn init() {
     Err(_)    => DEFAULT_LOG_LEVEL,
   };
 
-  env_logger::Builder::from_default_env()
+  let mut builder = env_logger::Builder::from_default_env();
+  builder
     .filter_level(loglevel)
-    .filter_module("ureq",log::LevelFilter::Info)
-    .filter_module("lopdf",log::LevelFilter::Info)
-    .filter_module("tracing",log::LevelFilter::Info)
-    .filter_module("winit",log::LevelFilter::Info)
-    .filter_module("naga",log::LevelFilter::Info)
-    .filter_module("wgpu_hal",log::LevelFilter::Info)
-    .filter_module("wgpu_core",log::LevelFilter::Info)
-    .filter_module("sctk",log::LevelFilter::Info)
-    .filter_module("egui_wgpu",log::LevelFilter::Info)
-    .filter_module("eframe",log::LevelFilter::Info)
     .target(DEFAULT_LOG_TARGET.into_env_logger_target())
     .format(move |buf, record| {
       let original_msg = format!("{}", record.args());
@@ -113,7 +118,10 @@ pub fn init() {
       } else {
         writeln!(buf, "[{}] {}", metadata.join(" "), redacted_msg)
       }
-    })
-    .init();
+    });
+  for &module in DEFAULT_LOG_NO_DEBUG_MODULES {
+    builder.filter_module(module,log::LevelFilter::Info);
+  }
+  builder.init();
 }
 

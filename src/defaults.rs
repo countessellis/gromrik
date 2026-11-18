@@ -23,10 +23,22 @@ pub(crate) const DEFAULT_LOG_FORMAT_LEVEL:     bool                             
 pub(crate) const DEFAULT_LOG_FORMAT_TARGET:    bool                                        = true; // false;
 pub(crate) const DEFAULT_LOG_DIR:              &'static str                                = "logs";
 pub(crate) const DEFAULT_LOG_FILE:             &'static str                                = "gromrik.log";
-//pub(crate) const DEFAULT_LOG_TARGET:           env_logger::fmt::Target                     = env_logger::fmt::Target::Stdout;
+//pub(crate) const DEFAULT_LOG_TARGET:           LogTarget                                   = env_logger::fmt::Target::Stdout;
 pub(crate) const DEFAULT_LOG_TARGET:           LogTarget                                   = LogTarget::File(DEFAULT_LOG_DIR, DEFAULT_LOG_FILE);
 pub(crate) const REDACT_LOG_LIST:              &str                                        = "config/redact_list.txt";
 
+pub(crate) const DEFAULT_LOG_NO_DEBUG_MODULES: &[&str] = &[
+  "ureq",
+  "lopdf",
+  "tracing",
+  "winit",
+  "naga",
+  "wgpu_hal",
+  "wgpu_core",
+  "sctk",
+  "egui_wgpu",
+  "eframe",
+];
 
 // Path Constants:
 
