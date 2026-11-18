@@ -26,7 +26,7 @@ impl fmt::Display for Help {
       format!("  --persona-file <PERSONA BUNDLE PATH> Path to a persona bundle (.grom file) to use instead of the preloaded personas. (default: none)"),
       #[cfg(any(feature = "tui",feature = "gui",feature = "web"))]
       format!("  --history-file <HISTORY FILE PATH>   Path to the default file to use for saving and loading history (default: {})",DEFAULT_HISTORY_FILE),
-      format!("  --mode <MODE>                        Mode to run in, (default: {}, choices: {}",DEFAULT_MODE,MODE_LIST.join(", ")),
+      format!("  --mode <MODE>                        Mode to run in, (default: {}, choices: {}",DEFAULT_MODE,MODE_LIST.join(",")),
       #[cfg(any(feature = "cli"))]
       format!("  --cli                                Run in command line mode"),
       #[cfg(any(feature = "tui"))]

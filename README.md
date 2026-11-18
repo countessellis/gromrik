@@ -1,3 +1,8 @@
+![Dress](resources/ghosts-titled-small.png)
+
+---
+---
+
 # Gromrik's Ghosts
 
 Gromrik is a displeased Dwarf who will grumpily tell you why you're wrong and not worth his time. He might give helpful ideas, if you don't mind him insulting you.
@@ -36,20 +41,17 @@ Options:
 
   --config <CONFIG FILE PATH>          Path to the config file (default: config/gromrik.cfg)
   --scene "<SCENE>"                    Scene for the interaction to happen in. Provide a one sentence description in quotes. (default: none)
-  --persona <PERSONA>                  Persona to interact with (default: gromrik, choices: gromrik, lyranis, commoner) Note: bundled personas can also be users.
+  --persona <PERSONA>                  Persona to interact with (default: gromrik, choices: gromrik,lyranis,commoner) Note: bundled personas can also be users.
   --llm-server-url <LLM SERVER URL>    URL for LLM chat endpoint, must be compatible with Ollama's /api/chat (default: http://localhost:11434/api/chat)
   --model <LLM MODEL NAME>             LLM model to use for interacting with the persona, must be already loaded into the server (default: qwen2.5:7b-instruct-q4_K_M)
   --persona-file <PERSONA BUNDLE PATH> Path to a persona bundle (.grom file) to use instead of the preloaded personas. (default: none)
   --history-file <HISTORY FILE PATH>   Path to the default file to use for saving and loading history (default: history/history.json)
-  --mode <MODE>                        Mode to run in, (default: gui, choices: cli, tui, gui, web, help
+  --mode <MODE>                        Mode to run in, (default: gui, choices: cli,tui,gui,web,help
   --cli                                Run in command line mode
   --tui                                Run in TUI mode
   --gui                                Run in GUI mode
   --web                                Run in web server mode
   --help                               Display this help message
-
-©2026 Bethany Davis <ellis@despoena.com>.
-
 
 ## Config File and Settings
 
@@ -211,3 +213,8 @@ Build with features used to make smaller binaries:
 For all build targets (replace "all" above with the listed target):
 
     make help
+
+---
+---
+
+©2026 Bethany Davis <ellis@despoena.com>.
