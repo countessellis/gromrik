@@ -1,4 +1,4 @@
-![Dress](resources/ghosts-titled-small.png)
+![Gromrik's Ghosts](resources/ghosts-titled-small.png)
 
 ---
 ---
