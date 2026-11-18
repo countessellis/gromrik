@@ -42,9 +42,16 @@ impl fmt::Display for Config {
       personas.join(", ")
     };
     let locations = {
-      let mut locations = self.persona.locations.values().map(|location| location.display.clone()).collect::<Vec<String>>();
-      locations.sort();
-      locations.join(", ")
+      #[cfg(any(feature = "tui", feature = "gui", feature = "web"))]
+      {
+        let mut locations = self.persona.locations.values().map(|location| location.display.clone()).collect::<Vec<String>>();
+        locations.sort();
+        locations.join(", ")
+      }
+      #[cfg(not(any(feature = "tui", feature = "gui", feature = "web")))]
+      {
+        "N/A"
+      }
     };
     write!(f,
 "
